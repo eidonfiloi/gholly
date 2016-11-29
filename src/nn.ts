@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 /// <reference path="../typings/index.d.ts" />
+
 export enum NodeType {
   EXCITATORY,
   INHIBITORY
@@ -30,6 +31,7 @@ export class Node {
 	id: string;
 	type: NodeType;
   state: NodeState;
+  layer: number;
   waitCount: number;
 	inputLinks: Link[];
   outLinks: Link[];
@@ -37,8 +39,9 @@ export class Node {
   output: number;
   threshold: number;
 
-  	constructor(id: string) {
+  	constructor(id: string, layer: number) {
     this.id = id;
+    this.layer = layer;
     this.type = Math.random() > 0.8 ? NodeType.INHIBITORY : NodeType.EXCITATORY;
     this.state = NodeState.DEFAULT;
     this.inputLinks = [];
@@ -102,6 +105,7 @@ export class Link {
   target: Node;
   weight:number;
   isActive: boolean;
+  isSameLayerLink: boolean;
   
   /**
    * Constructs a link in the neural network initialized with random weight.
@@ -117,6 +121,11 @@ export class Link {
     this.target = target;
     this.weight = weight;
     this.isActive = this.weight > 0.5 ? true : false;
+    this.isSameLayerLink = this.source.layer === this.target.layer;
+  }
+
+  sameLayerLink(): boolean {
+    return this.source.layer === this.target.layer;
   }
 }
 
@@ -156,7 +165,7 @@ export class Network {
         let nodeId = id.toString();
         id++;
         
-        let node = new Node(nodeId);
+        let node = new Node(nodeId,layerIdx);
         this.nodes.push(node);
         currentLayer.push(node);
         if (layerIdx >= 1) {
