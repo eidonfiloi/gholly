@@ -1,0 +1,35 @@
+{
+  "name": "gholly-ts",
+  "version": "0.0.1",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf dist/",
+    "prep": "typings install && cat  node_modules/d3/d3.min.js node_modules/underscore/underscore-min.js > dist/lib.js",
+    "build-css": "cat  styles.css > dist/bundle.css",
+    "watch-css": "node_modules/catw/bin/cmd.js  styles.css -o dist/bundle.css",
+    "build-html": "cat index.html > dist/index.html",
+    "watch-html": "node_modules/catw/bin/cmd.js index.html -o dist/index.html",
+    "build-js": "browserify src/main.ts -p [tsify] > dist/bundle.js",
+    "watch-js": "watchify src/main.ts -p [tsify] -v --debug -o dist/bundle.js",
+    "build": "npm run prep && npm run build-js && npm run build-css && npm run build-html",
+    "watch": "npm run prep & npm run watch-js & npm run watch-css & npm run watch-html",
+    "serve": "http-server dist/",
+    "serve-watch": "http-server dist/ & npm run watch"
+  },
+  "devDependencies": {
+    "@types/d3": "^4.3.0",
+    "@types/underscore": "^1.7.36",
+    "http-server": "^0.9.0",
+    "tsify": "^0.14.1",
+    "typescript": "^1.8.7",
+    "typings": "^0.7.9",
+    "uglify-js": "^2.6.2",
+    "watchify": "^3.7.0"
+  },
+  "dependencies": {
+    "catw": "^1.0.1",
+    "d3": "^3.5.17",
+    "underscore": "^1.8.3"
+  }
+}
