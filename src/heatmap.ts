@@ -68,8 +68,9 @@ export class HeatMap {
     // Get a range of colors.
     let tmpScale = d3.scale.linear<string, string>()
         .domain([0, .5, 1])
-        .range(["#f59322", "#e8eaeb", "#0877bd"])
+        .range(["#0877bd","#f59322", "#F53C22"])
         .clamp(true);
+
     // Due to numerical error, we need to specify
     // d3.range(0, end + small_epsilon, step)
     // in order to guarantee that we will have end/step entries with
@@ -78,7 +79,7 @@ export class HeatMap {
       return tmpScale(a);
     });
     this.color = d3.scale.quantize<string>()
-                     .domain([-1, 1])
+                     .domain([0, 1])
                      .range(colors);
 
     container = container.append("div")
@@ -172,10 +173,11 @@ export class HeatMap {
     let context = (<HTMLCanvasElement>this.canvas.node()).getContext("2d");
     let image = context.createImageData(this.numSamples, this.numSamples);
 
+    let value = _.max(node.inputLinks,function(l:Link) {return l.weight;}).weight;
+    let c = d3.rgb(this.color(2*value - 1));
+
     for (let y = 0, p = -1; y < dy; ++y) {
       for (let x = 0; x < dx; ++x) {
-        let value = Math.random();
-        let c = d3.rgb(this.color(value));
         image.data[++p] = c.r;
         image.data[++p] = c.g;
         image.data[++p] = c.b;

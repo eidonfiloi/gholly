@@ -18,7 +18,7 @@ import * as nn from "./nn";
 import {HeatMap, reduceMatrix} from "./heatmap";
 import {Node, Link, Network} from "./nn";
 
-const RECT_SIZE = 10;
+const RECT_SIZE = 15;
 const DENSITY = 100;
 let iter = 0;
 let trainData = [];
@@ -27,15 +27,15 @@ let linkWidthScale = d3.scale.linear()
   .range([1, 10])
   .clamp(true);
 let colorScale = d3.scale.linear<string>()
-                     .domain([-1, 0, 1])
-                     .range(["#f59322", "#e8eaeb", "#0877bd"])
+                     .domain([0, .5, 1])
+                     .range(["#0877bd","#f59322", "#F53C22"])
                      .clamp(true);
 
 let selectedNodeId: string = null;
 // Plot the heatmap.
 let xDomain: [number, number] = [-6, 6];
 let heatMap =
-    new HeatMap(3000, DENSITY, xDomain, xDomain, d3.select("#heatmap"),
+    new HeatMap(300, DENSITY, xDomain, xDomain, d3.select("#heatmap"),
         {showAxes: true});
 
 class Player {
@@ -109,15 +109,27 @@ function makeGUI() {
     player.pause();
     oneStep();
   });
+
+  let mEdges = d3.select("#mEdges").on("change", function() {
+    network.m = +this.value;
+  });
+  mEdges.property("value", network.m);
 }
 
-function reset(onStartup=false) {
+function reset(hard=false) {
   
   player.pause();
 
+
+  let suffix = (network.numLayers - 2) !== 1 ? "s" : "";
+  d3.select("#layers-label").text("Hidden layer" + suffix);
+  d3.select("#num-layers").text((network.numLayers - 2));
+
   // Make a simple network.
-  iter = 0;
-  network = new Network(testNetworkShape);
+  if(hard) {
+  	iter = 0;
+  	network = new Network(testNetworkShape);
+  }
   drawSankey(network);
   updateUI();
 };
@@ -127,14 +139,20 @@ function drawSankey(network: Network): void {
 	let svg = d3.select("#svg");
   // Remove all svg elements.
   svg.select("g.core").remove();
+  // Remove all div elements.
+  d3.select("#network").selectAll("div.canvas").remove();
+  d3.select("#network").selectAll("div.plus-minus-neurons").remove();
  
+
   // Get the width of the svg container.
   let padding = 3;
-
-  let width = 720;
- 
+  let co = <HTMLDivElement> d3.select(".column.output").node();
+  let cf = <HTMLDivElement> d3.select(".column.features").node();
+  let width = co.offsetLeft - cf.offsetLeft;
   svg.attr("width", width);
 
+  console.log("co",co,"cf",cf,"width",width);
+ 
   // Map of all node coordinates.
   let node2coord: {[id: string]: {cx: number, cy: number}} = {};
   let container = svg.append("g")
@@ -144,8 +162,8 @@ function drawSankey(network: Network): void {
   let numLayers = network.numLayers;
   let featureWidth = 118;
   let layerScale = d3.scale.ordinal<number, number>()
-      .domain(d3.range(1, 2*numLayers))
-      .rangePoints([featureWidth, width - RECT_SIZE], 0.7);
+      .domain(d3.range(1, 5*numLayers-5))
+      .rangePoints([featureWidth, width - RECT_SIZE]);
   let nodeIndexScale = (nodeIndex: number) => nodeIndex * (RECT_SIZE + 25);
 
   // Draw the input layer separately.
@@ -161,9 +179,12 @@ function drawSankey(network: Network): void {
   // Draw the intermediate layers.
   for (let layerIdx = 1; layerIdx < numLayers; layerIdx++) {
     let numNodes = network.network[layerIdx].length;
-    let cx_in = layerScale(2*layerIdx-1) + RECT_SIZE / 2;
-    let cx_out = layerScale(2*layerIdx) + RECT_SIZE / 2;
+    let cx_in = layerScale(5*layerIdx-2) + RECT_SIZE / 2;
+    let cx_out = layerScale(5*layerIdx-4) + RECT_SIZE / 2;
     maxY = Math.max(maxY, nodeIndexScale(numNodes));
+    addPlusMinusControl(layerScale(5*layerIdx-4), layerIdx);
+    //addEdgeControl(layerScale(layerIdx) + 10, layerIdx);
+    //rewireEdgeControl(layerScale(layerIdx) + 20, layerIdx);
     for (let i = 0; i < numNodes; i++) {
       let node = network.network[layerIdx][i];
       let cy = nodeIndexScale(i) + RECT_SIZE / 2;
@@ -234,7 +255,7 @@ function updateLinkUI(network: Network, container: d3.Selection<any>) {
             .style({
               "stroke-dashoffset": -iter / 3,
               "stroke-width": linkWidthScale(Math.abs(link.weight)),
-              "stroke": colorScale(link.weight)
+              "stroke": colorScale(2*link.weight-1)
             })
             .datum(link);
         }
@@ -316,6 +337,67 @@ function drawLink(
   return line;
 }
 
+function addPlusMinusControl(x: number, layerIdx: number) {
+  let div = d3.select("#network").append("div")
+    .classed("plus-minus-neurons", true)
+    .style("left", `${x - 10}px`);
+
+  let i = layerIdx - 1;
+  let firstRow = div.append("div").attr("class", `ui-numNodes${layerIdx}`);
+
+  firstRow.append("button")
+      .attr("class", "mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab")
+      .on("click", () => {
+        //let numNeurons = network.network[i].length;
+        network.rewireEdges(i);
+        reset();
+      })
+      .append("i")
+      .attr("class", "material-icons")
+      .text("shuffle");
+
+  firstRow.append("button")
+      .attr("class", "mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab")
+      .on("click", () => {
+        //let numNeurons = network.network[i].length;
+        network.addEdges(i);
+        reset();
+      })
+      .append("i")
+      .attr("class", "material-icons")
+      .text("reorder");
+
+  firstRow.append("button")
+      .attr("class", "mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab")
+      .on("click", () => {
+        //let numNeurons = network.network[i].length;
+        network.addNeuron(i);
+        reset();
+      })
+    .append("i")
+      .attr("class", "material-icons")
+      .text("add");
+
+  firstRow.append("button")
+      .attr("class", "mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab")
+      .on("click", () => {
+        let numNeurons = network.network[i].length;
+        if (numNeurons <= 1) {
+          return;
+        }
+        network.removeNeuron(i);
+        reset();
+      })
+    .append("i")
+      .attr("class", "material-icons")
+      .text("remove");
+
+  let suffix = network.network[i].length > 1 ? "s" : "";
+  div.append("div").text(
+    network.network[i].length + " neuron" + suffix
+  );
+}
+
 function updateUI() {
   // Update the links visually.
   updateLinkUI(network, d3.select("g.core"));
@@ -323,7 +405,8 @@ function updateUI() {
   // Update all decision boundaries.
   d3.select("#network").selectAll("div.canvas")
       .each(function(data: {heatmap: HeatMap, id: string}) {
-      	data.heatmap.updateHeatMapBackground(new Node("-1",-1));
+      	let currentNode = network.getNode(data.id.split("_")[0]);
+      	data.heatmap.updateHeatMapBackground(currentNode);
   });
 
   function zeroPad(n: number): string {

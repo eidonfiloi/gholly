@@ -141,6 +141,7 @@ export class Network {
   network: Node[][];
   links: Link[];
   nodes: Node[];
+  m: number;
   spikingAvalancheCountArr;
   spikingAvalancheSizeArr;
 
@@ -150,6 +151,7 @@ export class Network {
     this.network = [];
     this.links = [];
     this.nodes = [];
+    this.m = 1;
     this.spikingAvalancheCountArr = [];
     this.spikingAvalancheSizeArr = [];
     let id = 1;
@@ -192,6 +194,31 @@ export class Network {
           }
         }
       }
+    }
+  }
+
+  addNeuron(layerIdx: number): void {
+
+  }
+
+  removeNeuron(layerIdx: number): void {
+
+  }
+
+  addEdges(layerIdx: number): void {
+
+  }
+
+  rewireEdges(layerIdx: number): void {
+    
+  }
+
+  getNode(id: string): Node {
+    let candidateNode = _.filter(this.nodes,function(n){return n.id === id;});
+    if(candidateNode.length === 1) {
+      return candidateNode[0];
+    } else {
+      return new Node("-1",-1);
     }
   }
   
