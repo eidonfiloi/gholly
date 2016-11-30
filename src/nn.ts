@@ -198,6 +198,10 @@ export class Network {
   }
 
   addNeuron(layerIdx: number): void {
+    //output layer
+    if(layerIdx === this.numLayers - 1) {
+      let candidateNodes = this.network[layerIdx];
+    } 
 
   }
 
