@@ -13,10 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 /// <reference path="../typings/index.d.ts" />
+
 import * as nn from "./nn";
+import {HeatMap, reduceMatrix} from "./heatmap";
 import {Node, Link, Network} from "./nn";
 
 const RECT_SIZE = 10;
+const DENSITY = 100;
 let iter = 0;
 let trainData = [];
 let linkWidthScale = d3.scale.linear()
@@ -27,6 +30,13 @@ let colorScale = d3.scale.linear<string>()
                      .domain([-1, 0, 1])
                      .range(["#f59322", "#e8eaeb", "#0877bd"])
                      .clamp(true);
+
+let selectedNodeId: string = null;
+// Plot the heatmap.
+let xDomain: [number, number] = [-6, 6];
+let heatMap =
+    new HeatMap(3000, DENSITY, xDomain, xDomain, d3.select("#heatmap"),
+        {showAxes: true});
 
 class Player {
   private timerIndex = 0;
@@ -253,6 +263,23 @@ function drawNode(cx: number, cy: number, nodeId: string, isInput: boolean,
       width: RECT_SIZE,
       height: RECT_SIZE,
     });
+
+    // Draw the node's canvas.
+  let div = d3.select("#network").insert("div", ":first-child")
+    .attr({
+      "id": `canvas-${nodeId}`,
+      "class": "canvas"
+    })
+    .style({
+      position: "absolute",
+      left: `${x + 3}px`,
+      top: `${y + 3}px`
+    });
+    div.style("cursor", "pointer");
+  
+  let nodeHeatMap = new HeatMap(RECT_SIZE, DENSITY / 10, xDomain,
+      xDomain, div, {noSvg: true});
+  div.datum({heatmap: nodeHeatMap, id: nodeId});
 }
 
 function drawLink(
@@ -292,6 +319,12 @@ function drawLink(
 function updateUI() {
   // Update the links visually.
   updateLinkUI(network, d3.select("g.core"));
+
+  // Update all decision boundaries.
+  d3.select("#network").selectAll("div.canvas")
+      .each(function(data: {heatmap: HeatMap, id: string}) {
+      	data.heatmap.updateHeatMapBackground(new Node("-1",-1));
+  });
 
   function zeroPad(n: number): string {
     let pad = "000000";
