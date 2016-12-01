@@ -44,9 +44,16 @@ export class HeatMap {
 
   constructor(
       width: number, numSamples: number, xDomain: [number, number],
-      yDomain: [number, number], container: d3.Selection<any>,
+      yDomain: [number, number], containerName: string,
       userSettings?: HeatMapSettings) {
     this.numSamples = numSamples;
+    let container = d3.select(containerName);
+    
+    // let inputHeatMapWidth = document.querySelector(containerName).parentElement
+    //     .getBoundingClientRect().width;
+    //     console.log(document.querySelector(containerName).parentElement,inputHeatMapWidth);
+    // let width = inputHeatMapWidth;
+
     let height = width;
     let padding = userSettings.showAxes ? 20 : 0;
 
@@ -165,6 +172,27 @@ export class HeatMap {
     }
     context.putImageData(image, 0, 0);
   }
+
+  generateHeatMap(data_: number[][] = []): void {
+    // Compute the pixel colors; scaled by CSS.
+    let dx = this.numSamples;
+    let dy = this.numSamples;
+    let context = (<HTMLCanvasElement>this.canvas.node()).getContext("2d");
+    let image = context.createImageData(this.numSamples, this.numSamples);
+
+    for (let y = 0, p = -1; y < dy; ++y) {
+      for (let x = 0; x < dx; ++x) {
+        let value = data_.length !== 0 ? data_[x][y] : Math.random();
+        let c = d3.rgb(this.color(value));
+        image.data[++p] = c.r;
+        image.data[++p] = c.g;
+        image.data[++p] = c.b;
+        image.data[++p] = 160;
+      }
+    }
+    context.putImageData(image, 0, 0);
+  }
+
   updateHeatMapBackground(node: Node): void {
 
     // Compute the pixel colors; scaled by CSS.

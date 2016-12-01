@@ -64,11 +64,9 @@ limitations under the License.
     </nav>
   </div>
   <main class="mdl-layout__content">
-    <div class="mdl-grid">
-      <div class="mdl-cell mdl-cell--3-col mdl-grid">
-      </div>
-      <div class="mdl-cell mdl-cell--6-col mdl-grid">
-          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+    <div id="top-controls" class="mdl-grid">
+      <div class="mdl-cell mdl-cell--4-col mdl-grid">
+        <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
             <i class="material-icons">reorder</i>
           </button>
           <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
@@ -80,54 +78,51 @@ limitations under the License.
           <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
             <i class="material-icons">remove</i>
           </button>
-          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+          <button id="reset-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
             <i class="material-icons">replay</i>
           </button>
-          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+          <button id="play-pause-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
             <i class="material-icons">play_arrow</i>
             <i class="material-icons">pause</i>
           </button>
-          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+          <button id="next-step-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
             <i class="material-icons">skip_next</i>
           </button>
       </div>
+      <div class="mdl-cell mdl-cell--2-col mdl-grid">
+          <div class="control">
+          <span class="label">Iterations</span>
+          <span class="value" id="iter-number"></span>
+        </div>
+      </div>
+      <div class="demo-graph mdl-cell mdl-cell--3-col mdl-grid">
+        <div class="linechart" id="actLinechart"></div>
+      </div>
       <div class="mdl-cell mdl-cell--3-col mdl-grid">
+        <div class="linechart" id="actLinechart2"></div>
       </div>
     </div>
     <div class="mdl-grid">
-      <div id="network" class="mdl-cell mdl-cell--9-col"></div>
+      <div id="network" class="mdl-cell mdl-cell--9-col mdl-grid">
+      </div>
       <div class="mdl-cell mdl-cell--3-col">
-        <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col">
-          <div class="demo-card-square mdl-card mdl-shadow--2dp mdl-cell--12-col">
-            <div class="mdl-card__title mdl-card--expand">
-              <h2 class="mdl-card__title-text">Update</h2>
-            </div>
-            <div class="mdl-card__supporting-text">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-              Aenan convallis.
-            </div>
-            <div class="mdl-card__actions mdl-card--border">
-              <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-                View Updates
-              </a>
+          <div class="demo-card-square mdl-card mdl-cell mdl-cell--12-col mdl-grid mdl-shadow--2dp">
+          <div class="mdl-card__title mdl-card--expand">
+            <div id="inputHeatMap" class="demo-charts">
             </div>
           </div>
-        </div>
-        <div class="mdl-cell--1-col"></div>
-        <div class="mdl-card mdl-color--deep-purple-500 mdl-shadow--2dp mdl-cell mdl-cell--12-col">
-          <div class="demo-card-square mdl-card mdl-shadow--2dp mdl-cell--12-col">
-            <div class="mdl-card__title mdl-card--expand">
-              <h2 class="mdl-card__title-text">Update</h2>
-            </div>
-            <div class="mdl-card__supporting-text">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          <!-- <div class="mdl-card__supporting-text">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
               Aenan convallis.
-            </div>
-            <div class="mdl-card__actions mdl-card--border">
-              <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-                View Updates
-              </a>
-            </div>
+          </div> -->
+          <div class="mdl-card__actions mdl-card--border">
+            <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+              Next Input
+            </a>
+            <div class="mdl-layout-spacer"></div>
+            <button class="mdl-button mdl-js-button mdl-button--icon">
+              <i class="material-icons">play_arrow</i>
+            </button>
           </div>
         </div>
       </div>

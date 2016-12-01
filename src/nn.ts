@@ -120,7 +120,7 @@ export class Link {
     this.source = source;
     this.target = target;
     this.weight = weight;
-    this.isActive = this.weight > 0.5 ? true : false;
+    this.isActive = this.weight > 0.9 ? true : false;
     this.isSameLayerLink = this.source.layer === this.target.layer;
   }
 

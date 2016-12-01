@@ -17,6 +17,10 @@ limitations under the License.
 import * as nn from "./nn";
 import {HeatMap, reduceMatrix} from "./heatmap";
 import {Node, Link, Network} from "./nn";
+import {AppendingLineChart} from "./linechart";
+
+const DENSITY = 100;
+
 
 let labelDistance = 0;
 let nominal_base_node_size = 8;
@@ -27,12 +31,171 @@ let max_stroke = 4.5;
 let max_base_node_size = 36;
 let min_zoom = 0.1;
 let max_zoom = 10;
+let xDomain: [number, number] = [-6, 6];
+
 
 let testNetworkShape = [10,40,10]
 let network = new Network(testNetworkShape);
 
 let nodes = network.nodes;
 let links = network.activeLinks();
+let iter = 0;
+
+let actLineChart = new AppendingLineChart(d3.select("#actLinechart"),
+    ["#FBFBFB"]);
+
+let actLineChart2 = new AppendingLineChart(d3.select("#actLinechart2"),
+    ["#FBFBFB","#69F0AE","#FFC107"]);
+
+let inputHeatMap =
+    new HeatMap(150, DENSITY, xDomain, xDomain, "#inputHeatMap",
+        {showAxes: false});
+
+
+class Player {
+  private timerIndex = 0;
+  private isPlaying = false;
+  private callback: (isPlaying: boolean) => void = null;
+
+  /** Plays/pauses the player. */
+  playOrPause() {
+    if (this.isPlaying) {
+      this.isPlaying = false;
+      this.pause();
+    } else {
+      this.isPlaying = true;
+      
+      this.play();
+    }
+  }
+
+  onPlayPause(callback: (isPlaying: boolean) => void) {
+    this.callback = callback;
+  }
+
+  play() {
+    this.pause();
+    this.isPlaying = true;
+    if (this.callback) {
+      this.callback(this.isPlaying);
+    }
+    this.start(this.timerIndex);
+  }
+
+  pause() {
+    this.timerIndex++;
+    this.isPlaying = false;
+    if (this.callback) {
+      this.callback(this.isPlaying);
+    }
+  }
+
+  private start(localTimerIndex: number) {
+    d3.timer(() => {
+      if (localTimerIndex < this.timerIndex) {
+        return true;  // Done.
+      }
+      oneStep();
+      return false;  // Not done.
+    }, 0);
+  }
+}
+
+let player = new Player();
+
+function makeGUI() {
+  d3.select("#reset-button").on("click", () => {
+    reset(true);
+    d3.select("#play-pause-button");
+  });
+
+  d3.select("#play-pause-button").on("click", function () {
+    // Change the button's content.
+    player.playOrPause();
+  });
+
+  player.onPlayPause(isPlaying => {
+    d3.select("#play-pause-button").classed("playing", isPlaying);
+  });
+
+  d3.select("#next-step-button").on("click", () => {
+    player.pause();
+    oneStep();
+  });
+
+  d3.select("#iter-number").text(addCommas(zeroPad(iter)));
+  inputHeatMap.generateHeatMap([]);
+}
+
+function reset(hard=false) {
+  
+  player.pause();
+  actLineChart.reset();
+  actLineChart2.reset();
+  // Make network anew
+  if(hard) {
+  	iter = 0;
+  	network = new Network(testNetworkShape);
+  }
+  drawNetwork(network);
+  updateUI();
+};
+
+function drawNetwork(network_: Network): void {
+
+}
+
+function oneStep(): void {
+  iter++;
+  // trainData.forEach((point, i) => {
+  //   let input = constructInput(point.x, point.y);
+  //   nn.forwardProp(network, input);
+  //   nn.backProp(network, point.label, nn.Errors.SQUARE);
+  //   if ((i + 1) % state.batchSize === 0) {
+  //     nn.updateWeights(network, state.learningRate, state.regularizationRate);
+  //   }
+  // });
+  // // Compute the loss.
+  // lossTrain = getLoss(network, trainData);
+  // lossTest = getLoss(network, testData);
+  updateUI();
+}
+
+function updateUI() {
+  // Update the links visually.
+  // updateLinkUI(network, d3.select("g.core"));
+
+  inputHeatMap.generateHeatMap([]);
+
+  // // Update all decision boundaries.
+  // d3.select("#network").selectAll("div.canvas")
+  //     .each(function(data: {heatmap: HeatMap, id: string}) {
+  //     	let currentNode = network.getNode(data.id.split("_")[0]);
+  //     	data.heatmap.updateHeatMapBackground(currentNode);
+  // });
+
+ 
+  // Update loss and iteration number.
+  
+  d3.select("#iter-number").text(addCommas(zeroPad(iter)));
+  actLineChart.addDataPoint([Math.random()]);
+  actLineChart2.addDataPoint([Math.random()*2,Math.random()*3,Math.random()]);
+}
+
+function zeroPad(n: number): string {
+    let pad = "000000";
+    return (pad + n).slice(-pad.length);
+  }
+
+  function addCommas(s: string): string {
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  function humanReadable(n: number): string {
+    return n.toFixed(3);
+  }
+
+
 
 let svg = d3.select("#network")
             //.append("div")
@@ -136,6 +299,8 @@ function dblclick(d) {
 function dragstart(d) {
   d3.select(this).classed("fixed", d.fixed = true);
 }
+
+makeGUI();
 
 // function resize() {
 //     // let width = window.innerWidth*0.7; 
