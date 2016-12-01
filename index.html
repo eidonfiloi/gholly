@@ -13,7 +13,7 @@ limitations under the License.
 ==============================================================================-->
 <html>
 <head lang="en">
-  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" href="#">
   <meta charset="utf-8">
   <meta name="viewport" content="width=1024">
   <meta name="keywords" content="gholly">
@@ -31,116 +31,114 @@ limitations under the License.
   <script src="lib.js"></script>
 </head>
 <body>  
-  <!-- Header -->
-  <header>
-    <h1 class="l--page">Gholly</h1>
+  <div class="demo-layout-transparent mdl-layout mdl-js-layout">
+  <header class="mdl-layout__header mdl-layout__header--transparent">
+    <div class="mdl-layout__header-row">
+      <!-- Title -->
+      <span class="mdl-layout-title">GHOLLY</span>
+      <!-- Add spacer, to align navigation to the right -->
+      <div class="mdl-layout-spacer"></div>
+      <!-- Navigation -->
+      <nav class="mdl-navigation">
+        <!-- Icon button -->
+        <button class="mdl-button mdl-js-button mdl-button--icon">
+          <i class="material-icons">reorder</i>
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--icon">
+          <i class="material-icons">shuffle</i>
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--icon">
+          <i class="material-icons">add</i>
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--icon">
+          <i class="material-icons">remove</i>
+        </button>
+      </nav>
+    </div>
   </header>
-
-  <div id="top-controls">
-    <div class="container l--page">
-      <div class="timeline-controls">
-        <button class="mdl-button mdl-js-button mdl-button--icon ui-resetButton" id="reset-button" title="Reset the network">
-          <i class="material-icons">replay</i>
-        </button>
-        <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored ui-playButton" id="play-pause-button" title="Run/Pause">
-          <i class="material-icons">play_arrow</i>
-          <i class="material-icons">pause</i>
-        </button>
-        <button class="mdl-button mdl-js-button mdl-button--icon ui-stepButton" id="next-step-button" title="Step">
-          <i class="material-icons">skip_next</i>
-        </button>
-      </div>
-      <div class="control">
-        <span class="label">Iterations</span>
-        <span class="value" id="iter-number"></span>
-      </div>
-      <div class="control ui-mEdges">
-        <label for="mEdges">number of new edges</label>
-        <div class="select">
-          <select id="mEdges">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-          </select>
-        </div>
-      </div>
-      <!-- Slider with Starting Value -->
-      <div class="control ui-mEdges">
-        <label for="mEdges">number of new edges</label>
-        <input class="mdl-slider mdl-js-slider" id="mEdges_slider" type="range"
-          min="0" max="13" value="1" tabindex="0">
-      </div>  
-    </div>
+  <div class="mdl-layout__drawer">
+    <span class="mdl-layout-title">Title</span>
+    <nav class="mdl-navigation">
+      <a class="mdl-navigation__link" href="#">Link</a>
+      
+    </nav>
   </div>
-  <!-- Main Part -->
-  <div id="main-part" class="l--page">
-    <!--  Data Column-->
-    <div class="column data">
-      <h4>
-        <span>Data</span>
-      </h4>
-    </div>
-    <!-- Features Column -->
-    <div class="column features">
-      <h4>Input</h4>
-      <div id="network">
-        <svg id="svg" width="510" height="450">
-          <defs>
-              <marker id="markerArrow" markerWidth="7" markerHeight="13" refX="1" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M2,11 L7,6 L2,2" />
-              </marker>
-          </defs>
-        </svg>
-      </div> 
-    </div>
-
-     <!-- Hidden Layers Column -->
-    <div class="column hidden-layers">
-      <h4>
-        <div class="ui-numHiddenLayers">
-          <button id="add-layers" class="mdl-button mdl-js-button mdl-button--icon">
+  <main class="mdl-layout__content">
+    <div class="mdl-grid">
+      <div class="mdl-cell mdl-cell--3-col mdl-grid">
+      </div>
+      <div class="mdl-cell mdl-cell--6-col mdl-grid">
+          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+            <i class="material-icons">reorder</i>
+          </button>
+          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+            <i class="material-icons">shuffle</i>          
+          </button>
+          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
             <i class="material-icons">add</i>
           </button>
-          <button id="remove-layers" class="mdl-button mdl-js-button mdl-button--icon">
+          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
             <i class="material-icons">remove</i>
           </button>
-        </div>
-        <span id="num-layers"></span>
-        <span id="layers-label"></span>
-      </h4>
-      <div class="bracket"></div>
+          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+            <i class="material-icons">replay</i>
+          </button>
+          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+            <i class="material-icons">play_arrow</i>
+            <i class="material-icons">pause</i>
+          </button>
+          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+            <i class="material-icons">skip_next</i>
+          </button>
+      </div>
+      <div class="mdl-cell mdl-cell--3-col mdl-grid">
+      </div>
     </div>
-
-    <!-- Output Column -->
-    <div class="column output">
-      <h4>Output</h4>
-      <div class="metrics">
-        <div class="output-stats ui-percTrainData">
-          <span>In-Degree distribution</span>
-          <div class="value" id="in-degree-distr"></div>
+    <div class="mdl-grid">
+      <div id="network" class="mdl-cell mdl-cell--9-col"></div>
+      <div class="mdl-cell mdl-cell--3-col">
+        <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col">
+          <div class="demo-card-square mdl-card mdl-shadow--2dp mdl-cell--12-col">
+            <div class="mdl-card__title mdl-card--expand">
+              <h2 class="mdl-card__title-text">Update</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Aenan convallis.
+            </div>
+            <div class="mdl-card__actions mdl-card--border">
+              <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                View Updates
+              </a>
+            </div>
+          </div>
         </div>
-        <div class="output-stats train">
-          <span>Out-Degree loss</span>
-          <div class="value" id="in-degree-distr"></div>
+        <div class="mdl-cell--1-col"></div>
+        <div class="mdl-card mdl-color--deep-purple-500 mdl-shadow--2dp mdl-cell mdl-cell--12-col">
+          <div class="demo-card-square mdl-card mdl-shadow--2dp mdl-cell--12-col">
+            <div class="mdl-card__title mdl-card--expand">
+              <h2 class="mdl-card__title-text">Update</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Aenan convallis.
+            </div>
+            <div class="mdl-card__actions mdl-card--border">
+              <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                View Updates
+              </a>
+            </div>
+          </div>
         </div>
-        <div id="linechart"></div>
       </div>
     </div>
 
-  </div>
 
-  <!-- Footer -->
-  <footer>
     
-  </footer>
+
+
+  </main>
+</div>
   <script src="bundle.js"></script>
 </body>
 </html>

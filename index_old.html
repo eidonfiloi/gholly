@@ -1,0 +1,146 @@
+<!doctype html>
+<!-- Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================-->
+<html>
+<head lang="en">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1024">
+  <meta name="keywords" content="gholly">
+
+  <meta property="og:type" content="article"/>
+  <meta property="og:title" content="Gholly"/>
+  <meta property="og:description" content="Gholly">
+  <meta property="og:url" content=""/>
+  <meta property="og:image" content=""/>
+
+  <meta name="author" content="Gholly">
+  <title>Gholly</title>
+  <link rel="stylesheet" href="bundle.css" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500|Material+Icons" rel="stylesheet" type="text/css">
+  <script src="lib.js"></script>
+</head>
+<body>  
+  <!-- Header -->
+  <header>
+    <h1 class="l--page">Gholly</h1>
+  </header>
+
+  <div id="top-controls">
+    <div class="container l--page">
+      <div class="timeline-controls">
+        <button class="mdl-button mdl-js-button mdl-button--icon ui-resetButton" id="reset-button" title="Reset the network">
+          <i class="material-icons">replay</i>
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored ui-playButton" id="play-pause-button" title="Run/Pause">
+          <i class="material-icons">play_arrow</i>
+          <i class="material-icons">pause</i>
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--icon ui-stepButton" id="next-step-button" title="Step">
+          <i class="material-icons">skip_next</i>
+        </button>
+      </div>
+      <div class="control">
+        <span class="label">Iterations</span>
+        <span class="value" id="iter-number"></span>
+      </div>
+      <div class="control ui-mEdges">
+        <label for="mEdges">number of new edges</label>
+        <div class="select">
+          <select id="mEdges">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+          </select>
+        </div>
+      </div>
+      <!-- Slider with Starting Value -->
+      <div class="control ui-mEdges">
+        <label for="mEdges">number of new edges</label>
+        <input class="mdl-slider mdl-js-slider" id="mEdges_slider" type="range"
+          min="0" max="13" value="1" tabindex="0">
+      </div>  
+    </div>
+  </div>
+  <!-- Main Part -->
+  <div id="main-part" class="l--page">
+    <!--  Data Column-->
+    <div class="column data">
+      <h4>
+        <span>Data</span>
+      </h4>
+    </div>
+    <!-- Features Column -->
+    <div class="column features">
+      <h4>Input</h4>
+      <div id="network">
+        <svg id="svg" width="510" height="450">
+          <defs>
+              <marker id="markerArrow" markerWidth="7" markerHeight="13" refX="1" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M2,11 L7,6 L2,2" />
+              </marker>
+          </defs>
+        </svg>
+      </div> 
+    </div>
+
+     <!-- Hidden Layers Column -->
+    <div class="column hidden-layers">
+      <h4>
+        <div class="ui-numHiddenLayers">
+          <button id="add-layers" class="mdl-button mdl-js-button mdl-button--icon">
+            <i class="material-icons">add</i>
+          </button>
+          <button id="remove-layers" class="mdl-button mdl-js-button mdl-button--icon">
+            <i class="material-icons">remove</i>
+          </button>
+        </div>
+        <span id="num-layers"></span>
+        <span id="layers-label"></span>
+      </h4>
+      <div class="bracket"></div>
+    </div>
+
+    <!-- Output Column -->
+    <div class="column output">
+      <h4>Output</h4>
+      <div class="metrics">
+        <div class="output-stats ui-percTrainData">
+          <span>In-Degree distribution</span>
+          <div class="value" id="in-degree-distr"></div>
+        </div>
+        <div class="output-stats train">
+          <span>Out-Degree loss</span>
+          <div class="value" id="in-degree-distr"></div>
+        </div>
+        <div id="linechart"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    
+  </footer>
+  <script src="bundle.js"></script>
+</body>
+</html>

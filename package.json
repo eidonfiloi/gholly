@@ -6,8 +6,8 @@
   "scripts": {
     "clean": "rm -rf dist/",
     "prep": "typings install && cat node_modules/material-design-lite/material.min.js node_modules/d3/d3.min.js node_modules/underscore/underscore-min.js > dist/lib.js",
-    "build-css": "cat node_modules/material-design-lite/material.min.css styles.css > dist/bundle.css",
-    "watch-css": "node_modules/catw/bin/cmd.js node_modules/material-design-lite/material.min.css styles.css -o dist/bundle.css",
+    "build-css": "cat material.min.css styles.css > dist/bundle.css",
+    "watch-css": "node_modules/catw/bin/cmd.js material.min.css styles.css -o dist/bundle.css",
     "build-html": "cat index.html > dist/index.html",
     "watch-html": "node_modules/catw/bin/cmd.js index.html -o dist/index.html",
     "build-js": "browserify src/main.ts -p [tsify] > dist/bundle.js",
