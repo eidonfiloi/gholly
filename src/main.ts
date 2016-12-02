@@ -18,6 +18,7 @@ import * as nn from "./nn";
 import {HeatMap, reduceMatrix} from "./heatmap";
 import {Node, Link, Network} from "./nn";
 import {AppendingLineChart} from "./linechart";
+import {HistogramChart} from "./histogramchart";
 
 const DENSITY = 100;
 
@@ -37,8 +38,6 @@ let xDomain: [number, number] = [-6, 6];
 let testNetworkShape = [10,40,10]
 let network = new Network(testNetworkShape);
 
-
-
 let iter = 0;
 
 let actLineChart = new AppendingLineChart(d3.select("#actLinechart"),
@@ -50,6 +49,10 @@ let actLineChart2 = new AppendingLineChart(d3.select("#actLinechart2"),
 let inputHeatMap =
     new HeatMap(150, DENSITY, xDomain, xDomain, "#inputHeatMap",
         {showAxes: false});
+
+let histDataTest = [1,2,3,4,5,2,3,4,5,7,8,6,5,2,3,1,4,3,2,1,5,4,3,6,7,5,4,5,3,3,3,3,3,2,2,3,3,4,5,6,6,6,7,7,7,6,6];
+
+let histChart = new HistogramChart(d3.select("#histChart"),histDataTest,5);
 
 
 // D3 GRAPH
@@ -76,7 +79,7 @@ svg.call(zoom);
 let force = d3.layout.force<Node>()
     .charge(-400)
     .linkDistance(400)
-    .linkStrength(function(l:Link,i){return 2*l.weight -1;})
+    //.linkStrength(function(l:Link,i){return 2*l.weight -1;})
     .gravity(0.5)
     .nodes(network.nodes)
     .links(network.activeLinks())
@@ -208,7 +211,7 @@ function drawNetwork(network: Network): void {
   link.enter().append("line")
     .attr("class", "link")
     .style("stroke", function (d) { return '#673AB7'; })
-    .style("stroke-width", function(d:Link) { return Math.sqrt(d.weight)})
+    .style("stroke-width", function(d:Link) { return Math.sqrt(d.weight*5)})
     .style("stroke-dasharray", "10,10")
     .each(animLink);  
 
@@ -269,6 +272,7 @@ function updateUI() {
   // Update loss and iteration number.
   
   d3.select("#iter-number").text(addCommas(zeroPad(iter)));
+  histChart.addData([Math.floor((Math.random() * 30) + 1)]);
   actLineChart.addDataPoint([Math.random()]);
   actLineChart2.addDataPoint([Math.random()*2,Math.random()*3,Math.random()]);
 }
