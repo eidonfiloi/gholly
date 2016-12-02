@@ -62,13 +62,14 @@ let svg = d3.select("#network")
              //class to make it responsive
             .classed("svg-content-responsive", true); 
             
-let g = svg.append("g");
+let g = svg.append("g").attr("id","network-g-core");
 
-let zoom = d3.behavior.zoom().scaleExtent([min_zoom,max_zoom]);
+
+let zoom = d3.behavior.zoom()
+                      .scaleExtent([min_zoom,max_zoom])
+                      .on("zoom", redraw);
 /*let zoomListener = d3.behavior.zoom()
                               .scaleExtent([min_zoom,max_zoom]);*/
-
-zoom.on("zoom", redraw);  
 
 svg.call(zoom);
 
@@ -130,13 +131,13 @@ class Player {
   }
 
   private start(localTimerIndex: number) {
-    d3.timer(() => {
+    setInterval(() => {
       if (localTimerIndex < this.timerIndex) {
         return true;  // Done.
       }
       oneStep();
       return false;  // Not done.
-    }, 0);
+    }, 150);
   }
 }
 
