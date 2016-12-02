@@ -38,6 +38,8 @@ export class Node {
   totalInput: number;
   output: number;
   threshold: number;
+  x: number;
+  y: number;
 
   	constructor(id: string, layer: number) {
     this.id = id;

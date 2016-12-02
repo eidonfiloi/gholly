@@ -37,8 +37,8 @@ let xDomain: [number, number] = [-6, 6];
 let testNetworkShape = [10,40,10]
 let network = new Network(testNetworkShape);
 
-let nodes = network.nodes;
-let links = network.activeLinks();
+
+
 let iter = 0;
 
 let actLineChart = new AppendingLineChart(d3.select("#actLinechart"),
@@ -51,6 +51,45 @@ let inputHeatMap =
     new HeatMap(150, DENSITY, xDomain, xDomain, "#inputHeatMap",
         {showAxes: false});
 
+
+// D3 GRAPH
+let svg = d3.select("#network")
+            //.append("div")
+            .classed("svg-container", true)
+            .append("svg")
+            .attr("preserveAspectRatio", "xMinYMin meet")
+            .attr("viewBox", "0 0 600 400")
+             //class to make it responsive
+            .classed("svg-content-responsive", true); 
+            
+let g = svg.append("g");
+
+let zoom = d3.behavior.zoom().scaleExtent([min_zoom,max_zoom]);
+/*let zoomListener = d3.behavior.zoom()
+                              .scaleExtent([min_zoom,max_zoom]);*/
+
+zoom.on("zoom", redraw);  
+
+svg.call(zoom);
+
+let force = d3.layout.force<Node>()
+    .charge(-400)
+    .linkDistance(400)
+    .linkStrength(function(l:Link,i){return 2*l.weight -1;})
+    .gravity(0.5)
+    .nodes(network.nodes)
+    .links(network.activeLinks())
+    .on("tick", tick);
+
+let drag = force.drag()
+    .on("dragstart", dragstart);
+
+let node: d3.selection.Update<Node>;
+
+let link: d3.selection.Update<d3.layout.force.Link<Node>>;
+
+let nodes = force.nodes();
+let links = force.links();
 
 class Player {
   private timerIndex = 0;
@@ -103,6 +142,7 @@ class Player {
 
 let player = new Player();
 
+
 function makeGUI() {
   d3.select("#reset-button").on("click", () => {
     reset(true);
@@ -123,8 +163,11 @@ function makeGUI() {
     oneStep();
   });
 
+  drawNetwork(network);
+
   d3.select("#iter-number").text(addCommas(zeroPad(iter)));
   inputHeatMap.generateHeatMap([]);
+
 }
 
 function reset(hard=false) {
@@ -141,8 +184,54 @@ function reset(hard=false) {
   updateUI();
 };
 
-function drawNetwork(network_: Network): void {
+function drawNetwork(network: Network): void {
 
+  //force.stop();
+  console.log(network);
+  // svg.select("g").remove();
+  // g = svg.append("g");
+
+  nodes = network.nodes;
+  links = network.activeLinks();
+
+  force
+      .nodes(nodes)
+      .links(links);
+     
+
+  link = g.selectAll(".link")
+      .data(links);
+
+  console.log("link",link);
+
+  link.enter().append("line")
+    .attr("class", "link")
+    .style("stroke", function (d) { return '#673AB7'; })
+    .style("stroke-width", function(d:Link) { return Math.sqrt(d.weight)})
+    .style("stroke-dasharray", "10,10")
+    .each(animLink);  
+
+  // Exit any old links.
+  link.exit().remove();
+
+  node = g.selectAll(".node")
+    .data(nodes);
+
+  console.log("node",node);  
+
+  node.enter().append("circle")
+    .style("fill", function (d) { return '#E91C63'; })
+    .attr("class", "node")
+    .attr("r", 12)
+    .on("dblclick", dblclick)
+    .call(drag);
+
+  // Exit any old nodes.
+  node.exit().transition()
+      .attr("r", 0)
+    .remove();
+
+  force.start();
 }
 
 function oneStep(): void {
@@ -158,6 +247,7 @@ function oneStep(): void {
   // // Compute the loss.
   // lossTrain = getLoss(network, trainData);
   // lossTest = getLoss(network, testData);
+  drawNetwork(network);
   updateUI();
 }
 
@@ -197,61 +287,9 @@ function zeroPad(n: number): string {
 
 
 
-let svg = d3.select("#network")
-            //.append("div")
-            .classed("svg-container", true)
-            .append("svg")
-            .attr("preserveAspectRatio", "xMinYMin meet")
-            .attr("viewBox", "0 0 600 400")
-             //class to make it responsive
-            .classed("svg-content-responsive", true); 
-            
-let g = svg.append("g");
 
-let zoom = d3.behavior.zoom().scaleExtent([min_zoom,max_zoom]);
-/*let zoomListener = d3.behavior.zoom()
-                              .scaleExtent([min_zoom,max_zoom]);*/
 
-let force = d3.layout.force()
-    .charge(-400)
-    .linkDistance(400)
-    .linkStrength(function(l:Link,i){return 2*l.weight -1;})
-    .gravity(0.5)
-    .on("tick", tick);
 
-let drag = force.drag()
-    .on("dragstart", dragstart);
-
-let link = g.selectAll(".link");
-let node = g.selectAll(".node");
-
-force
-  .nodes(nodes)
-  .links(links)
-  .start();
-
-link = link
-		.data(links)
-		.enter().append("line")
-  		.attr("class", "link")
-      .style("stroke", function (d) { return '#673AB7'; })
-  		.style("stroke-width", function(d:Link) { return Math.sqrt(d.weight)});
-
-link.style( "stroke-dasharray", "10,10" )
-  .each( animLink );
-
-node = node.data(nodes)
-.enter().append("circle")
-  .style("fill", function (d) { return '#E91C63'; })
-  .attr("class", "node")
-  .attr("r", 12)
-  .on("dblclick", dblclick)
-  .call(drag);
-
-zoom.on("zoom", redraw);  
-//zoomListener.on("zoom",() => zoomHandler());
-
-svg.call(zoom);
 // resize();
 // d3.select(window).on("resize", resize);
 
@@ -283,6 +321,7 @@ function animLink( d ) {
 }
 
 function tick() {
+  //console.log("tick link",link);
   link.attr("x1", function(d) { return d.source.x; })
       .attr("y1", function(d) { return d.source.y; })
       .attr("x2", function(d) { return d.target.x; })
