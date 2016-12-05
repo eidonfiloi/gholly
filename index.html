@@ -16,100 +16,109 @@ limitations under the License.
   <link rel="icon" type="image/png" href="#">
   <meta charset="utf-8">
   <meta name="viewport" content="width=1024">
-  <meta name="keywords" content="gholly">
+  <meta name="keywords" content="criticalAI">
 
   <meta property="og:type" content="article"/>
-  <meta property="og:title" content="Gholly"/>
-  <meta property="og:description" content="Gholly">
+  <meta property="og:title" content="criticalAI"/>
+  <meta property="og:description" content="criticalAI">
   <meta property="og:url" content=""/>
   <meta property="og:image" content=""/>
 
-  <meta name="author" content="Gholly">
-  <title>Gholly</title>
+  <meta name="author" content="criticalAI">
+  <title>criticalAI</title>
   <link rel="stylesheet" href="bundle.css" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500|Material+Icons" rel="stylesheet" type="text/css">
   <script src="lib.js"></script>
 </head>
 <body>  
-  <div class="demo-layout-transparent mdl-layout mdl-js-layout">
+  <div class="demo-layout-transparent mdl-layout mdl-js-layout mdl-layout--fixed-drawer">
   <header class="mdl-layout__header mdl-layout__header--transparent">
+    
     <div class="mdl-layout__header-row">
-      <!-- Title -->
-      <span class="mdl-layout-title">GHOLLY</span>
+      <span href="#!" class="brand-logo">
+        <img src="img/logo_lg.png">
+      </span>
+    <!-- <span class="mdl-layout-title">Title</span> -->
+    
       <!-- Add spacer, to align navigation to the right -->
       <div class="mdl-layout-spacer"></div>
       <!-- Navigation -->
       <nav class="mdl-navigation">
-        <!-- Icon button -->
         <button class="mdl-button mdl-js-button mdl-button--icon">
-          <i class="material-icons">reorder</i>
-        </button>
-        <button class="mdl-button mdl-js-button mdl-button--icon">
-          <i class="material-icons">shuffle</i>
-        </button>
-        <button class="mdl-button mdl-js-button mdl-button--icon">
-          <i class="material-icons">add</i>
-        </button>
-        <button class="mdl-button mdl-js-button mdl-button--icon">
-          <i class="material-icons">remove</i>
+          <i class="material-icons">search</i>
         </button>
       </nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">
-    <span class="mdl-layout-title">Title</span>
     <nav class="mdl-navigation">
-      <a class="mdl-navigation__link" href="#">Link</a>
-      
+      <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+        <i class="material-icons">reorder</i>
+      </button>
+      <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+        <i class="material-icons">shuffle</i>          
+      </button>
+      <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+        <i class="material-icons">add</i>
+      </button>
+      <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+        <i class="material-icons">remove</i>
+      </button>
+      <button id="reset-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+        <i class="material-icons">replay</i>
+      </button>
+      <button id="play-pause-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+        <i class="material-icons">play_arrow</i>
+        <i class="material-icons">pause</i>
+      </button>
+      <button id="next-step-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+        <i class="material-icons">skip_next</i>
+      </button>
     </nav>
   </div>
   <main class="mdl-layout__content">
     <div id="top-controls" class="mdl-grid">
-      <div class="mdl-cell mdl-cell--4-col mdl-grid">
-        <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
-            <i class="material-icons">reorder</i>
-          </button>
-          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
-            <i class="material-icons">shuffle</i>          
-          </button>
-          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
-            <i class="material-icons">add</i>
-          </button>
-          <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
-            <i class="material-icons">remove</i>
-          </button>
-          <button id="reset-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
-            <i class="material-icons">replay</i>
-          </button>
-          <button id="play-pause-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
-            <i class="material-icons">play_arrow</i>
-            <i class="material-icons">pause</i>
-          </button>
-          <button id="next-step-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
-            <i class="material-icons">skip_next</i>
-          </button>
-      </div>
-      <div class="mdl-cell mdl-cell--2-col mdl-grid">
+      <div class="mdl-cell mdl-cell--1-col mdl-grid mdl-color--gholly-cell">
           <div class="control">
           <span class="label">Iterations</span>
           <span class="value" id="iter-number"></span>
         </div>
       </div>
-      <div class="demo-graph mdl-cell mdl-cell--3-col mdl-grid">
+      <div class="mdl-cell mdl-cell--1-col mdl-grid mdl-color--gholly-cell">
+          <!-- Numeric Textfield with Floating Label -->
+        <form action="#">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?" id="num_nodes">
+            <label class="mdl-textfield__label" for="sample4">#V</label>
+            <span class="mdl-textfield__error">Input is not a number!</span>
+          </div>
+        </form>
+      </div>
+      <div class="mdl-cell mdl-cell--1-col mdl-grid mdl-color--gholly-cell">
+          <!-- Numeric Textfield with Floating Label -->
+        <form action="#">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?" id="num_edges">
+            <label class="mdl-textfield__label" for="sample4">#E</label>
+            <span class="mdl-textfield__error">Input is not a number!</span>
+          </div>
+        </form>
+      </div>
+      <div class="demo-graph mdl-cell mdl-cell--3-col mdl-grid mdl-color--gholly-cell">
         <div class="linechart" id="histChart"></div>
       </div>
-      <div class="demo-graph mdl-cell mdl-cell--3-col mdl-grid">
+      <div class="demo-graph mdl-cell mdl-cell--3-col mdl-grid mdl-color--gholly-cell">
         <div class="linechart" id="actLinechart"></div>
       </div>
-      <div class="mdl-cell mdl-cell--3-col mdl-grid">
+      <div class="mdl-cell mdl-cell--3-col mdl-grid mdl-color--gholly-cell">
         <div class="linechart" id="actLinechart2"></div>
       </div>
     </div>
     <div class="mdl-grid">
-      <div id="network" class="mdl-cell mdl-cell--9-col mdl-grid">
+      <div id="network" class="mdl-cell mdl-cell--9-col mdl-grid mdl-color--gholly-cell">
       </div>
-      <div class="mdl-cell mdl-cell--3-col">
-          <div class="demo-card-square mdl-card mdl-cell mdl-cell--12-col mdl-grid mdl-shadow--2dp">
+      <div class="mdl-cell mdl-cell--3-col mdl-color--gholly-cell">
+          <div class="demo-card-square mdl-card mdl-cell mdl-cell--12-col mdl-grid mdl-shadow--2dp mdl-color--gholly-cell">
           <div class="mdl-card__title mdl-card--expand">
             <div id="inputHeatMap" class="demo-charts">
             </div>

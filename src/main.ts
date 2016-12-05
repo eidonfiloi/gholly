@@ -44,7 +44,7 @@ let actLineChart = new AppendingLineChart(d3.select("#actLinechart"),
     ["#FBFBFB"]);
 
 let actLineChart2 = new AppendingLineChart(d3.select("#actLinechart2"),
-    ["#FBFBFB","#69F0AE","#FFC107"]);
+    ["#FBFBFB","#00BCD4","#FFC107"]);
 
 let inputHeatMap =
     new HeatMap(150, DENSITY, xDomain, xDomain, "#inputHeatMap",
@@ -52,7 +52,7 @@ let inputHeatMap =
 
 let histDataTest = [1,2,3,4,5,2,3,4,5,7,8,6,5,2,3,1,4,3,2,1,5,4,3,6,7,5,4,5,3,3,3,3,3,2,2,3,3,4,5,6,6,6,7,7,7,6,6];
 
-let histChart = new HistogramChart(d3.select("#histChart"),histDataTest,5);
+let histChart = new HistogramChart(d3.select("#histChart"),histDataTest,5,"#00BCD4");
 
 
 // D3 GRAPH
@@ -170,6 +170,7 @@ function makeGUI() {
   drawNetwork(network);
 
   d3.select("#iter-number").text(addCommas(zeroPad(iter)));
+
   inputHeatMap.generateHeatMap([]);
 
 }

@@ -29,8 +29,9 @@ export class HistogramChart {
   private yScale: d3.scale.Linear<number, number>;
   private hist: d3.Selection<any>;
   private height: number;
+  private color: string;
 
-  constructor(container: d3.Selection<any>, data_: number[], numBins: number) {
+  constructor(container: d3.Selection<any>, data_: number[], numBins: number, color: string) {
     let node = <HTMLElement>container.node();
     console.log(node);
     let totalWidth = node.offsetWidth;
@@ -40,6 +41,7 @@ export class HistogramChart {
     this.height = totalHeight - margin.top - margin.bottom;
     this.data = data_;
     this.numBins = _.max(this.data,function(d){return d;});
+    this.color = color;
 
     this.svg = container.append("svg")
       .attr("width", width + margin.left + margin.right)
@@ -75,16 +77,16 @@ export class HistogramChart {
 
     this.hist.append("rect")
         .attr("x", 1)
-        .attr("fill","#69F0AE")
+        .attr("fill",this.color)
         .attr("width", this.xScale(bins[0].dx))
         .attr("height", function(d:d3.layout.histogram.Bin<number>) { return height - y(d.length); });
 
-    this.hist.append("text")
+    /*this.hist.append("text")
         .attr("dy", ".75em")
         .attr("y", 6)
         .attr("x", this.xScale(bins[0].dx) / 2)
         .attr("text-anchor", "middle")
-        .text(function(d) { return d.length; });
+        .text(function(d) { return d.length; });*/
 
     this.g.append("g")
         .attr("class", "axis axis--x")
@@ -130,16 +132,16 @@ export class HistogramChart {
 
     this.hist.append("rect")
         .attr("x", 1)
-        .attr("fill","#69F0AE")
+        .attr("fill",this.color)
         .attr("width", this.xScale(bins[0].dx))
         .attr("height", function(d:d3.layout.histogram.Bin<number>) { return height - y(d.length); });
 
-    this.hist.append("text")
-        .attr("dy", ".75em")
-        .attr("y", 6)
-        .attr("x", this.xScale(bins[0].dx) / 2)
-        .attr("text-anchor", "middle")
-        .text(function(d) { return d.length; });
+    // this.hist.append("text")
+    //     .attr("dy", ".75em")
+    //     .attr("y", 6)
+    //     .attr("x", this.xScale(bins[0].dx) / 2)
+    //     .attr("text-anchor", "middle")
+    //     .text(function(d) { return d.length; });
 
     this.g.append("g")
         .attr("class", "axis axis--x")
