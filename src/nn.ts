@@ -292,6 +292,7 @@ export class Network {
     }
   }
   
+  // returns if after input network is stable or not
   forwardStep(inputs: number[]): boolean {
     let inputLayer = this.network[0];
     if (inputs.length > inputLayer.length) {

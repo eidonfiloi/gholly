@@ -233,7 +233,8 @@ function drawNetwork(network: Network): void {
   link.enter().append("line")
     .attr("class", "link")
     .style("stroke", function (d) { return COLOR_DEEP_ORANGE; })
-    .style("stroke-width", function(d:Link) { return Math.sqrt(d.weight)})
+    .style("stroke-width", function(d:Link) { return Math.sqrt(d.weight);})
+    .style("stroke-opacity", function(d:Link) { return .2;})
     .style("stroke-dasharray", "3,3")
     .each(animLink);  
 
@@ -308,6 +309,7 @@ function oneStep(): void {
   // // Compute the loss.
   // lossTrain = getLoss(network, trainData);
   // lossTest = getLoss(network, testData);
+  let nextInputData = dataIOHandler.nextData();
   drawNetwork(network);
   updateUI();
 }
