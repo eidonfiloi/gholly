@@ -16,11 +16,27 @@ limitations under the License.
 
 import * as nn from "./nn";
 import {HeatMap, reduceMatrix} from "./heatmap";
-import {Node, Link, Network} from "./nn";
+import {NodeType, NodeState, Node, Link, Network} from "./nn";
+import {TestImage} from "./dataIO";
 import {AppendingLineChart} from "./linechart";
 import {HistogramChart} from "./histogramchart";
 
 const DENSITY = 100;
+
+const COLOR_CYAN = "#00BCD4";
+const COLOR_LIGHT_BLUE = "#03A9F4";
+const COLOR_BLUE = "#2196F3";
+const COLOR_INDIGO = "#3F51B5";
+const COLOR_DEEP_PURPLE = "#673AB7";
+const COLOR_PURPLE = "#9C27B0";
+const COLOR_PINK = "#E91E63";
+const COLOR_RED = "#F44235";
+const COLOR_DEEP_ORANGE = "#FF5622";
+const COLOR_ORANGE = "#FF9800";
+const COLOR_AMBER = "#FFC107";
+const COLOR_YELLOW = "#FFEB3B";
+const COLOR_LIGHT_GREEN = "#8BC34A";
+const COLOR_GREY = "#9E9E9E";
 
 
 let labelDistance = 0;
@@ -33,10 +49,15 @@ let max_base_node_size = 36;
 let min_zoom = 0.1;
 let max_zoom = 10;
 let xDomain: [number, number] = [-6, 6];
+let dataIOHandler = new TestImage();
 
 
-let testNetworkShape = [10,40,10]
+
+
+let testNetworkShape = [150,100,10]
 let network = new Network(testNetworkShape);
+console.log(network);
+console.log(network.activeLinks());
 
 let iter = 0;
 
@@ -81,7 +102,7 @@ let force = d3.layout.force<Node>()
     .linkDistance(400)
     //.linkStrength(function(l:Link,i){return 2*l.weight -1;})
     .gravity(0.5)
-    .nodes(network.nodes)
+    .nodes(network.hiddenNodes())
     .links(network.activeLinks())
     .on("tick", tick);
 
@@ -196,7 +217,7 @@ function drawNetwork(network: Network): void {
   // svg.select("g").remove();
   // g = svg.append("g");
 
-  nodes = network.nodes;
+  nodes = network.hiddenNodes();
   links = network.activeLinks();
 
   force
@@ -211,9 +232,9 @@ function drawNetwork(network: Network): void {
 
   link.enter().append("line")
     .attr("class", "link")
-    .style("stroke", function (d) { return '#673AB7'; })
-    .style("stroke-width", function(d:Link) { return Math.sqrt(d.weight*5)})
-    .style("stroke-dasharray", "10,10")
+    .style("stroke", function (d) { return COLOR_DEEP_ORANGE; })
+    .style("stroke-width", function(d:Link) { return Math.sqrt(d.weight)})
+    .style("stroke-dasharray", "3,3")
     .each(animLink);  
 
   // Exit any old links.
@@ -222,18 +243,53 @@ function drawNetwork(network: Network): void {
   node = g.selectAll(".node")
     .data(nodes);
 
-  console.log("node",node);  
-
-  node.enter().append("circle")
-    .style("fill", function (d) { return '#E91C63'; })
-    .attr("class", "node")
-    .attr("r", 12)
+  node
+    .enter()
+    .append("circle")
+    .attr("class", function(n:Node){
+      if(n.type === NodeType.EXCITATORY) {
+        return "node excitatory";
+      } else {
+        return "node inhibitory"
+      }
+    })
+    .attr("r",function(n:Node){
+      if(n.type === NodeType.EXCITATORY) {
+        return 6;
+      } else {
+        return 10
+      }
+    })
+    .style("fill","none")
+    .style("stroke",function (n:Node) {
+      if(n.type === NodeType.EXCITATORY) {
+        if(n.state === NodeState.DEFAULT) {
+        return COLOR_AMBER;
+      } else if(n.state === NodeState.SPIKING) {
+        return COLOR_RED;
+      } else {
+        return COLOR_GREY;
+      }
+      } else {
+       if(n.state === NodeState.DEFAULT) {
+        return COLOR_CYAN;
+      } else if(n.state === NodeState.SPIKING) {
+        return COLOR_PURPLE;
+      } else {
+        return COLOR_GREY;
+      }
+      }
+    })
+    .style("stroke-width",5)
     .on("dblclick", dblclick)
     .call(drag);
 
+  
+
   // Exit any old nodes.
-  node.exit().transition()
-      .attr("r", 0)
+  node.exit()
+      // .transition()
+      // .attr("r", 0)
     .remove();
 
   force.start();

@@ -122,7 +122,7 @@ export class Link {
     this.source = source;
     this.target = target;
     this.weight = weight;
-    this.isActive = this.weight > 0.9 ? true : false;
+    this.isActive = this.weight > 0.95 ? true : false;
     this.isSameLayerLink = this.source.layer === this.target.layer;
   }
 
@@ -157,7 +157,7 @@ export class Network {
     this.spikingAvalancheCountArr = [];
     this.spikingAvalancheSizeArr = [];
     let id = 1;
-    /** List of layers, with each layer being a list of nodes. */
+    /** Create input nodes, hidden nodes, output nodes */
     for (let layerIdx = 0; layerIdx < this.numLayers; layerIdx++) {
       let isOutputLayer = layerIdx === this.numLayers - 1;
       let isInputLayer = layerIdx === 0;
@@ -172,31 +172,95 @@ export class Network {
         let node = new Node(nodeId,layerIdx);
         this.nodes.push(node);
         currentLayer.push(node);
-        if (layerIdx >= 1) {
-          // Add links from nodes in the previous layer to this node (links will be randomly active!!!).
-          for (let j = 0; j < this.network[layerIdx - 1].length; j++) {
-            let prevNode = this.network[layerIdx - 1][j];
-            let link = new Link(prevNode, node, Math.random());
-            this.links.push(link);
-            prevNode.outLinks.push(link);
-            node.inputLinks.push(link);
-          }
-        }
       }
-      // add random links between nodes inside the current layer after build up
-      for (let i = 1; i < numNodes; i++) {
-        for (let j = 1; j < numNodes; j++) {
-          if(i !== j) {
-            let aNode = this.network[layerIdx][i];
-            let bNode = this.network[layerIdx][j];
-            let abLink = new Link(aNode,bNode,Math.random());
-            this.links.push(abLink);
-            aNode.outLinks.push(abLink);
-            bNode.inputLinks.push(abLink);
-          }
+    }
+
+    // add random links between hidden nodes
+    for (let i = 0; i < this.networkShape[1]; i++) {
+      for (let j = 0; j < this.networkShape[1]; j++) {
+        if(i !== j) {
+          let aNode = this.network[1][i];
+          let bNode = this.network[1][j];
+          let abLink = new Link(aNode,bNode,Math.random());
+          this.links.push(abLink);
+          aNode.outLinks.push(abLink);
+          bNode.inputLinks.push(abLink);
         }
       }
     }
+
+    // add links from input to hidden nodes
+    for (let i = 0; i < this.networkShape[1]; i++) {
+      for (let j = 0; j < this.networkShape[0]; j++) {
+        let inputNode = this.network[0][j];
+        let hiddenNode = this.network[1][i];
+        let link = new Link(inputNode, hiddenNode, Math.random());
+        this.links.push(link);
+        inputNode.outLinks.push(link);
+        hiddenNode.inputLinks.push(link);
+       }
+    }
+
+    // add links from hidden to output nodes
+    for (let i = 0; i < this.networkShape[1]; i++) {
+      for (let j = 0; j < this.networkShape[2]; j++) {
+        let outputNode = this.network[2][j];
+        let hiddenNode = this.network[1][i];
+        let link = new Link(hiddenNode, outputNode, Math.random());
+        this.links.push(link);
+        hiddenNode.outLinks.push(link);
+        outputNode.inputLinks.push(link);
+      }
+    }
+    // this.networkShape = networkShape;
+    // this.numLayers = networkShape.length;
+    // this.network = [];
+    // this.links = [];
+    // this.nodes = [];
+    // this.m = 1;
+    // this.spikingAvalancheCountArr = [];
+    // this.spikingAvalancheSizeArr = [];
+    // let id = 1;
+    // /** List of layers, with each layer being a list of nodes. */
+    // for (let layerIdx = 0; layerIdx < this.numLayers; layerIdx++) {
+    //   let isOutputLayer = layerIdx === this.numLayers - 1;
+    //   let isInputLayer = layerIdx === 0;
+    //   let currentLayer: Node[] = [];
+    //   this.network.push(currentLayer);
+    //   let numNodes = this.networkShape[layerIdx];
+    //   // create nodes on each layer
+    //   for (let i = 0; i < numNodes; i++) {
+    //     let nodeId = id.toString();
+    //     id++;
+        
+    //     let node = new Node(nodeId,layerIdx);
+    //     this.nodes.push(node);
+    //     currentLayer.push(node);
+    //     if (layerIdx >= 1) {
+    //       // Add links from nodes in the previous layer to this node (links will be randomly active!!!).
+    //       for (let j = 0; j < this.network[layerIdx - 1].length; j++) {
+    //         let prevNode = this.network[layerIdx - 1][j];
+    //         let link = new Link(prevNode, node, Math.random());
+    //         this.links.push(link);
+    //         prevNode.outLinks.push(link);
+    //         node.inputLinks.push(link);
+    //       }
+    //     }
+    //   }
+    //   // add random links between nodes inside the current layer after build up
+    //   for (let i = 1; i < numNodes; i++) {
+    //     for (let j = 1; j < numNodes; j++) {
+    //       if(i !== j) {
+    //         let aNode = this.network[layerIdx][i];
+    //         let bNode = this.network[layerIdx][j];
+    //         let abLink = new Link(aNode,bNode,Math.random());
+    //         this.links.push(abLink);
+    //         aNode.outLinks.push(abLink);
+    //         bNode.inputLinks.push(abLink);
+    //       }
+    //     }
+    //   }
+    // }
   }
 
   addNeuron(layerIdx: number): void {
@@ -307,7 +371,13 @@ export class Network {
     return _.map(this.network[this.network.length - 1],function(el){return el.totalInput;});
   }
 
-  activeLinks(): Link[] {
-    return _.filter(this.links,function(l){return l.isActive;});
+  activeLinks(hiddenOnly: boolean = true): Link[] {
+    let nL = this.numLayers;
+    return _.filter(this.links,function(l:Link){return l.isActive && l.sameLayerLink() && l.source.layer > 0 && l.source.layer < (nL - 1);});
+  }
+
+  hiddenNodes(): Node[] {
+    let nL = this.numLayers;
+    return _.filter(this.nodes,function(n:Node){return n.layer > 0 && n.layer < (nL - 1)});
   }
 }
