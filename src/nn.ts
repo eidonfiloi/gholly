@@ -117,12 +117,12 @@ export class Link {
    * @param regularization The regularization function that computes the
    *     penalty for this weight. If null, there will be no regularization.
    */
-  constructor(source: Node, target: Node, weight: number) {
+  constructor(source: Node, target: Node, weight: number, activeThreshold: number = 0.95) {
     this.id = source.id + "-" + target.id;
     this.source = source;
     this.target = target;
     this.weight = weight;
-    this.isActive = this.weight > 0.95 ? true : false;
+    this.isActive = this.weight > activeThreshold ? true : false;
     this.isSameLayerLink = this.source.layer === this.target.layer;
   }
 
@@ -144,26 +144,29 @@ export class Network {
   links: Link[];
   nodes: Node[];
   m: number;
+  maxM: number;
   spikingAvalancheCountArr;
   spikingAvalancheSizeArr;
 
-  constructor(networkShape: number[]) {
+  constructor(networkShape: number[], growAtOnce: boolean = true, m: number = 5) {
     this.networkShape = networkShape;
+    this.m = m;
+    this.maxM = this.networkShape[1];
     this.numLayers = networkShape.length;
     this.network = [];
     this.links = [];
     this.nodes = [];
-    this.m = 1;
     this.spikingAvalancheCountArr = [];
     this.spikingAvalancheSizeArr = [];
     let id = 1;
-    /** Create input nodes, hidden nodes, output nodes */
-    for (let layerIdx = 0; layerIdx < this.numLayers; layerIdx++) {
+
+    //create nodes with m nodes on hidden layer
+     for (let layerIdx = 0; layerIdx < this.numLayers; layerIdx++) {
       let isOutputLayer = layerIdx === this.numLayers - 1;
       let isInputLayer = layerIdx === 0;
       let currentLayer: Node[] = [];
       this.network.push(currentLayer);
-      let numNodes = this.networkShape[layerIdx];
+      let numNodes = isInputLayer || isOutputLayer ? this.networkShape[layerIdx] : this.m;
       // create nodes on each layer
       for (let i = 0; i < numNodes; i++) {
         let nodeId = id.toString();
@@ -176,12 +179,12 @@ export class Network {
     }
 
     // add random links between hidden nodes
-    for (let i = 0; i < this.networkShape[1]; i++) {
-      for (let j = 0; j < this.networkShape[1]; j++) {
+    for (let i = 0; i < this.m; i++) {
+      for (let j = 0; j < this.m; j++) {
         if(i !== j) {
           let aNode = this.network[1][i];
           let bNode = this.network[1][j];
-          let abLink = new Link(aNode,bNode,Math.random());
+          let abLink = new Link(aNode,bNode,Math.random(),0.4);
           this.links.push(abLink);
           aNode.outLinks.push(abLink);
           bNode.inputLinks.push(abLink);
@@ -190,11 +193,11 @@ export class Network {
     }
 
     // add links from input to hidden nodes
-    for (let i = 0; i < this.networkShape[1]; i++) {
+    for (let i = 0; i < this.m; i++) {
       for (let j = 0; j < this.networkShape[0]; j++) {
         let inputNode = this.network[0][j];
         let hiddenNode = this.network[1][i];
-        let link = new Link(inputNode, hiddenNode, Math.random());
+        let link = new Link(inputNode, hiddenNode, Math.random(),0.75);
         this.links.push(link);
         inputNode.outLinks.push(link);
         hiddenNode.inputLinks.push(link);
@@ -202,26 +205,22 @@ export class Network {
     }
 
     // add links from hidden to output nodes
-    for (let i = 0; i < this.networkShape[1]; i++) {
+    for (let i = 0; i < this.m; i++) {
       for (let j = 0; j < this.networkShape[2]; j++) {
         let outputNode = this.network[2][j];
         let hiddenNode = this.network[1][i];
-        let link = new Link(hiddenNode, outputNode, Math.random());
+        let link = new Link(hiddenNode, outputNode, Math.random(),0.75);
         this.links.push(link);
         hiddenNode.outLinks.push(link);
         outputNode.inputLinks.push(link);
       }
     }
-    // this.networkShape = networkShape;
-    // this.numLayers = networkShape.length;
-    // this.network = [];
-    // this.links = [];
-    // this.nodes = [];
-    // this.m = 1;
-    // this.spikingAvalancheCountArr = [];
-    // this.spikingAvalancheSizeArr = [];
-    // let id = 1;
-    // /** List of layers, with each layer being a list of nodes. */
+
+    // grow the network to the specified size
+    if(growAtOnce) {
+      this.grow();
+    } 
+    /** Create input nodes, hidden nodes, output nodes */
     // for (let layerIdx = 0; layerIdx < this.numLayers; layerIdx++) {
     //   let isOutputLayer = layerIdx === this.numLayers - 1;
     //   let isInputLayer = layerIdx === 0;
@@ -236,31 +235,83 @@ export class Network {
     //     let node = new Node(nodeId,layerIdx);
     //     this.nodes.push(node);
     //     currentLayer.push(node);
-    //     if (layerIdx >= 1) {
-    //       // Add links from nodes in the previous layer to this node (links will be randomly active!!!).
-    //       for (let j = 0; j < this.network[layerIdx - 1].length; j++) {
-    //         let prevNode = this.network[layerIdx - 1][j];
-    //         let link = new Link(prevNode, node, Math.random());
-    //         this.links.push(link);
-    //         prevNode.outLinks.push(link);
-    //         node.inputLinks.push(link);
-    //       }
-    //     }
     //   }
-    //   // add random links between nodes inside the current layer after build up
-    //   for (let i = 1; i < numNodes; i++) {
-    //     for (let j = 1; j < numNodes; j++) {
-    //       if(i !== j) {
-    //         let aNode = this.network[layerIdx][i];
-    //         let bNode = this.network[layerIdx][j];
-    //         let abLink = new Link(aNode,bNode,Math.random());
-    //         this.links.push(abLink);
-    //         aNode.outLinks.push(abLink);
-    //         bNode.inputLinks.push(abLink);
-    //       }
+    // }
+
+    // // add random links between hidden nodes
+    // for (let i = 0; i < this.networkShape[1]; i++) {
+    //   for (let j = 0; j < this.networkShape[1]; j++) {
+    //     if(i !== j) {
+    //       let aNode = this.network[1][i];
+    //       let bNode = this.network[1][j];
+    //       let abLink = new Link(aNode,bNode,Math.random());
+    //       this.links.push(abLink);
+    //       aNode.outLinks.push(abLink);
+    //       bNode.inputLinks.push(abLink);
     //     }
     //   }
     // }
+
+    // // add links from input to hidden nodes
+    // for (let i = 0; i < this.networkShape[1]; i++) {
+    //   for (let j = 0; j < this.networkShape[0]; j++) {
+    //     let inputNode = this.network[0][j];
+    //     let hiddenNode = this.network[1][i];
+    //     let link = new Link(inputNode, hiddenNode, Math.random());
+    //     this.links.push(link);
+    //     inputNode.outLinks.push(link);
+    //     hiddenNode.inputLinks.push(link);
+    //    }
+    // }
+
+    // // add links from hidden to output nodes
+    // for (let i = 0; i < this.networkShape[1]; i++) {
+    //   for (let j = 0; j < this.networkShape[2]; j++) {
+    //     let outputNode = this.network[2][j];
+    //     let hiddenNode = this.network[1][i];
+    //     let link = new Link(hiddenNode, outputNode, Math.random());
+    //     this.links.push(link);
+    //     hiddenNode.outLinks.push(link);
+    //     outputNode.inputLinks.push(link);
+    //   }
+    // }
+  }
+
+  grow() {
+    while(this.hiddenNodes().length < this.maxM) {
+      this.growStep();
+    }
+  }
+
+  growStep() {
+
+    if(this.hiddenNodes().length < this.maxM) {
+      // create new node
+      
+      let node = new Node((this.nodes.length + 1).toString(),1);
+
+      let allIncEdges = _.reduce(this.nodes, function(memo, n: Node){return memo + n.inputLinks.length;},0);
+      let nodesNum = this.nodes.length;
+      
+      for(let i = 0; i < this.m; i++) {
+        let shuffled = _.shuffle(this.nodes);
+        for(let j = 0; j < nodesNum; j++) {
+          let cn = <Node>shuffled[j];
+          let p = cn.inputLinks.length / allIncEdges;
+          if(Math.random() <= p) {
+            let link = new Link(node, cn, 1.0);
+            this.links.push(link);
+            node.outLinks.push(link);
+            cn.inputLinks.push(link);
+            break;
+          }
+        }
+      }
+
+      this.nodes.push(node);
+      this.network[1].push(node);
+    }
+    
   }
 
   addNeuron(layerIdx: number): void {

@@ -51,13 +51,11 @@ export class Cifar10Sample {
 
 			that.input_dim = dat.dim;
 			that.data = <number[][][]>dat.data;
-			console.log("cifar this data", that.data);
 			that.data_size = that.data.length;
 
 			let dx = that.input_dim[0];
 			let dy = that.input_dim[1];
 
-		    console.log("dataio node", node);
 		    let totalWidth = node.offsetWidth;
 		    let totalHeight = node.offsetHeight;
 		    let margin = {top: 0, right: 0, bottom: 0, left: 0};

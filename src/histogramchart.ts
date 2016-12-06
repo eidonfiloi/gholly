@@ -33,7 +33,6 @@ export class HistogramChart {
 
   constructor(container: d3.Selection<any>, data_: number[], numBins: number, color: string) {
     let node = <HTMLElement>container.node();
-    console.log(node);
     let totalWidth = node.offsetWidth;
     let totalHeight = node.offsetHeight;
     let margin = {top: 2, right: 0, bottom: 2, left: 2};
@@ -55,7 +54,6 @@ export class HistogramChart {
     //.range([this.xScale.domain()[0],this.xScale.domain()[1]])
     .bins(this.numBins)(this.data);
 
-    console.log(bins);
 
     this.xScale = d3.scale.linear()
       .domain([0,
@@ -101,7 +99,6 @@ export class HistogramChart {
   addData(moreData: number[]) {
 
     this.data = this.data.concat(moreData);
-    console.log(this.data);
     this.redraw();
   }
 
@@ -111,7 +108,6 @@ export class HistogramChart {
 
     let bins = d3.layout.histogram()
     .bins(this.numBins)(this.data);
-    console.log(bins);
     // Adjust the x and y domain.
     this.xScale.domain([0,
         d3.max(bins, function(d:d3.layout.histogram.Bin<number>) { return d.x; })])

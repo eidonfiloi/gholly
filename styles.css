@@ -32,6 +32,19 @@ body {
   display: inherit;
 }
 
+#network-grow-button .material-icons:nth-of-type(2) {
+  display: none;
+}
+
+#network-grow-button.playing .material-icons:nth-of-type(1) {
+  display: none;
+}
+
+#network-grow-button.playing .material-icons:nth-of-type(2) {
+  display: inherit;
+}
+
+
 #top-controls .control .label,
 #top-controls .control label {
   color: #FBFBFB;

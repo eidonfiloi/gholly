@@ -53,9 +53,8 @@ let xDomain: [number, number] = [-6, 6];
 let dataIOHandler = new Cifar10Sample("#inputDataPlaceHolder");
 
 let testNetworkShape = [150,100,10]
-let network = new Network(testNetworkShape);
-console.log(network);
-console.log(network.activeLinks());
+let network = new Network(testNetworkShape, false);
+console.log("network", network);
 
 let iter = 0;
 
@@ -163,7 +162,57 @@ class Player {
   }
 }
 
+class Grower {
+  private timerIndex = 0;
+  private isPlaying = false;
+  private callback: (isPlaying: boolean) => void = null;
+
+  /** Plays/pauses the player. */
+  playOrPause() {
+    if (this.isPlaying) {
+      this.isPlaying = false;
+      this.pause();
+    } else {
+      this.isPlaying = true;
+      
+      this.play();
+    }
+  }
+
+  onPlayPause(callback: (isPlaying: boolean) => void) {
+    this.callback = callback;
+  }
+
+  play() {
+    this.pause();
+    this.isPlaying = true;
+    if (this.callback) {
+      this.callback(this.isPlaying);
+    }
+    this.start(this.timerIndex);
+  }
+
+  pause() {
+    this.timerIndex++;
+    this.isPlaying = false;
+    if (this.callback) {
+      this.callback(this.isPlaying);
+    }
+  }
+
+  private start(localTimerIndex: number) {
+    setInterval(() => {
+      if (localTimerIndex < this.timerIndex) {
+        return true;  // Done.
+      }
+      oneGrowStep();
+      return false;  // Not done.
+    }, 100);
+  }
+}
+
 let player = new Player();
+let grower = new Grower();
 
 
 function makeGUI() {
@@ -187,6 +236,15 @@ function makeGUI() {
   });
 
   drawNetwork(network);
+
+  d3.select("#network-grow-button").on("click", function () {
+    // Change the button's content.
+    grower.playOrPause();
+  });
+
+  grower.onPlayPause(isPlaying => {
+    d3.select("#network-grow-button").classed("playing", isPlaying);
+  });
 
   d3.select("#iter-number").text(addCommas(zeroPad(iter)));
 
@@ -296,39 +354,25 @@ function drawNetwork(network: Network): void {
 
 function oneStep(): void {
   iter++;
-  // trainData.forEach((point, i) => {
-  //   let input = constructInput(point.x, point.y);
-  //   nn.forwardProp(network, input);
-  //   nn.backProp(network, point.label, nn.Errors.SQUARE);
-  //   if ((i + 1) % state.batchSize === 0) {
-  //     nn.updateWeights(network, state.learningRate, state.regularizationRate);
-  //   }
-  // });
-  // // Compute the loss.
-  // lossTrain = getLoss(network, trainData);
-  // lossTest = getLoss(network, testData);
+  
   let nextInputData = dataIOHandler.nextData();
   dataIOHandler.displayNextData(nextInputData);
   drawNetwork(network);
   updateUI();
 }
 
-function updateUI() {
-  // Update the links visually.
-  // updateLinkUI(network, d3.select("g.core"));
-
-  //inputHeatMap.generateHeatMap([]);
-
-  // // Update all decision boundaries.
-  // d3.select("#network").selectAll("div.canvas")
-  //     .each(function(data: {heatmap: HeatMap, id: string}) {
-  //     	let currentNode = network.getNode(data.id.split("_")[0]);
-  //     	data.heatmap.updateHeatMapBackground(currentNode);
-  // });
-
- 
-  // Update loss and iteration number.
+function oneGrowStep(): void {
   
+  network.growStep();
+  
+  $("#num_nodes").parent('div').addClass("is-focused");
+  d3.select("#num_nodes").attr('value',network.nodes.length);
+  $("#num_edges").parent('div').addClass("is-focused");
+  d3.select("#num_edges").attr('value',network.activeLinks(false).length);
+  drawNetwork(network);
+}
+
+function updateUI() { 
   d3.select("#iter-number").text(addCommas(zeroPad(iter)));
   histChart.addData([Math.floor((Math.random() * 30) + 1)]);
   actLineChart.addDataPoint([Math.random()]);
