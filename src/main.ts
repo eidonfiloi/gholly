@@ -49,10 +49,8 @@ let max_base_node_size = 36;
 let min_zoom = 0.1;
 let max_zoom = 10;
 let xDomain: [number, number] = [-6, 6];
-let dataIOHandler = new TestImage();
 
-
-
+let dataIOHandler = new Cifar10Sample("#inputDataPlaceHolder");
 
 let testNetworkShape = [150,100,10]
 let network = new Network(testNetworkShape);
@@ -68,7 +66,7 @@ let actLineChart2 = new AppendingLineChart(d3.select("#actLinechart2"),
     ["#FBFBFB","#00BCD4","#FFC107"]);
 
 let inputHeatMap =
-    new HeatMap(150, DENSITY, xDomain, xDomain, "#inputHeatMap",
+    new HeatMap("#inputHeatMap", 150, 150, DENSITY, DENSITY, xDomain, xDomain,
         {showAxes: false});
 
 let histDataTest = [1,2,3,4,5,2,3,4,5,7,8,6,5,2,3,1,4,3,2,1,5,4,3,6,7,5,4,5,3,3,3,3,3,2,2,3,3,4,5,6,6,6,7,7,7,6,6];
@@ -310,6 +308,7 @@ function oneStep(): void {
   // lossTrain = getLoss(network, trainData);
   // lossTest = getLoss(network, testData);
   let nextInputData = dataIOHandler.nextData();
+  dataIOHandler.displayNextData(nextInputData);
   drawNetwork(network);
   updateUI();
 }

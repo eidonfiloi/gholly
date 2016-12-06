@@ -37,16 +37,19 @@ export class HeatMap {
   };
   private xScale: d3.scale.Linear<number, number>;
   private yScale: d3.scale.Linear<number, number>;
-  private numSamples: number;
+  private dx: number;
+  private dy: number;
   private color: d3.scale.Quantize<string>;
   private canvas: d3.Selection<any>;
   private svg: d3.Selection<any>;
 
   constructor(
-      width: number, numSamples: number, xDomain: [number, number],
-      yDomain: [number, number], containerName: string,
+      containerName: string, width: number, height: number, dx: number, dy: number, 
+      xDomain: [number, number] = [0,255],
+      yDomain: [number, number] = [0, 255],
       userSettings?: HeatMapSettings) {
-    this.numSamples = numSamples;
+    this.dx = dx;
+    this.dy = dy;
     let container = d3.select(containerName);
     
     // let inputHeatMapWidth = document.querySelector(containerName).parentElement
@@ -54,7 +57,7 @@ export class HeatMap {
     //     console.log(document.querySelector(containerName).parentElement,inputHeatMapWidth);
     // let width = inputHeatMapWidth;
 
-    let height = width;
+    //let height = width;
     let padding = userSettings.showAxes ? 20 : 0;
 
     if (userSettings != null) {
@@ -98,8 +101,8 @@ export class HeatMap {
         left: `-${padding}px`
       });
     this.canvas = container.append("canvas")
-      .attr("width", numSamples)
-      .attr("height", numSamples)
+      .attr("width", dx)
+      .attr("height", dy)
       .style("width", (width - 2 * padding) + "px")
       .style("height", (height - 2 * padding) + "px")
       .style("position", "absolute")
@@ -143,11 +146,11 @@ export class HeatMap {
     }
   }
 
-  updateBackground(data: number[][], discretize: boolean): void {
+  updateBackground(data: number[][], discretize: boolean = false, colorize: boolean = false): void {
     let dx = data[0].length;
     let dy = data.length;
 
-    if (dx !== this.numSamples || dy !== this.numSamples) {
+    if (dx !== this.dx || dy !== this.dy) {
       throw new Error(
           "The provided data matrix must be of size " +
           "numSamples X numSamples");
@@ -163,7 +166,11 @@ export class HeatMap {
         if (discretize) {
           value = (value >= 0 ? 1 : -1);
         }
-        let c = d3.rgb(this.color(value));
+        if(colorize) {
+          let c = d3.rgb(this.color(value));
+        } else {
+          let c = {'r':value, 'g': value, 'b': value};
+        }
         image.data[++p] = c.r;
         image.data[++p] = c.g;
         image.data[++p] = c.b;

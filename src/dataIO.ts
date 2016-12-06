@@ -14,6 +14,7 @@ limitations under the License.
 ==============================================================================*/
 /// <reference path="../typings/index.d.ts" />
 
+import {HeatMap, reduceMatrix} from "./heatmap";
 
 export enum DataIOType {
   IMAGE,
@@ -26,25 +27,58 @@ export interface DataIOBase {
 	nextData: () => number[];
 }
 
-export class TestImage implements DataIOBase {
-	name: string;
-	type: DataIOType;
-	input_source: string;
-	sample_data: number[];
+export class Cifar10Sample implements DataIOBase {
+	type: DataIOType = DataIOType.IMAGE;
+	input_data_path: string;
+	input_dim: number[];
+	data: number[][][];
+	data_size: number;
+	container_name: string;
+	heatmap: HeatMap;
+	counter: number;
 
-	constructor(name: string = "testImageDataHandler",type: DataIOType = DataIOType.IMAGE,input_source: string = "img/tesla.jpg") {
-		this.name = name;
-		this.type = type;
-		this.input_source = input_source;
-		
+
+	constructor(containerName: string, input_data_path: string = "resources/cifar10_1_int.json") {
+		this.input_data_path = input_data_path;
+		this.container_name = containerName;
+		this.counter = 0;
+
+		d3.json(this.input_data_path, function(error,dat) {
+			if(error) console.log(error);
+
+			this.input_dim = dat['dim']
+			this.data = dat['data']
+			this.data_size = this.data.length;
+
+			let dx = this.input_dim[0];
+			let dy = this.input_dim[1];
+
+			let node = <HTMLElement>d3.select(this.container_name).node();
+		    console.log(node);
+		    let totalWidth = node.offsetWidth;
+		    let totalHeight = node.offsetHeight;
+		    let margin = {top: 0, right: 0, bottom: 0, left: 0};
+		    let width = totalWidth - margin.left - margin.right;
+		    let height = totalHeight - margin.top - margin.bottom;
+
+			this.heatmap = new HeatMap(this.container_name, width, height, dx, dy);
+		});		
 	}
 
-	nextData(): number[] {
-		let arr = [];
-		for(let i = 0; i < 150; i++) {
-			arr.push(Math.random());
+	nextData(increment: boolean = true, flatten: boolean = false): number[][] {
+		if(increment) {
+			return this.data[counter++ % this.data_size];
+		} else {
+			return this.data[counter % this.data_size];
 		}
-		return arr;
-		
+	}
+
+	nextDataAndDisplay(increment: boolean = true) {
+		let currentData = nextData(increment, false);
+		this.heatmap.updateBackGround(currentData);
+	}
+
+	displayNextData(currentData: number[][]) {
+		this.heatmap.updateBackGround(currentData);
 	}
 }
