@@ -52,8 +52,8 @@ let xDomain: [number, number] = [-6, 6];
 
 let dataIOHandler = new Cifar10Sample("#inputDataPlaceHolder");
 
-let testNetworkShape = [150,100,10]
-let network = new Network(testNetworkShape, false);
+let testNetworkShape = [1024,100,1024]
+let network = new Network(testNetworkShape);
 console.log("network", network);
 
 let iter = 0;
@@ -268,11 +268,6 @@ function reset(hard=false) {
 
 function drawNetwork(network: Network): void {
 
-  //force.stop();
-  console.log(network);
-  // svg.select("g").remove();
-  // g = svg.append("g");
-
   nodes = network.hiddenNodes();
   links = network.activeLinks();
 
@@ -284,7 +279,6 @@ function drawNetwork(network: Network): void {
   link = g.selectAll(".link")
       .data(links);
 
-  console.log("link",link);
 
   link.enter().append("line")
     .attr("class", "link")
@@ -357,6 +351,27 @@ function oneStep(): void {
   
   let nextInputData = dataIOHandler.nextData();
   dataIOHandler.displayNextData(nextInputData);
+
+  let isStable = network.forwardStep(dataIOHandler.flattenNextData(nextInputData));
+  console.log("isStable",isStable);
+  let spikingAvalancheCount = 0;
+  let spikingAvalancheSize = 0;
+  while(!isStable) {
+    spikingAvalancheCount += 1;
+    isStable = true;
+    let additionalSpikingAvalancheSize = network.stabilizeStep();
+    console.log("additionalSpikingAvalancheSize",additionalSpikingAvalancheSize);
+    console.log("hiddenNodes",network.hiddenNodes());
+    if(additionalSpikingAvalancheSize > 0) {
+      spikingAvalancheSize += additionalSpikingAvalancheSize;
+      isStable = false;
+    }
+    drawNetwork(network);
+  }
+  network.spikingAvalancheCountArr.push(spikingAvalancheCount);
+  network.spikingAvalancheSizeArr.push(spikingAvalancheSize);
+  let outP = network.readOutput();
+  console.log(outP);
   drawNetwork(network);
   updateUI();
 }
@@ -368,11 +383,15 @@ function oneGrowStep(): void {
   $("#num_nodes").parent('div').addClass("is-focused");
   d3.select("#num_nodes").attr('value',network.nodes.length);
   $("#num_edges").parent('div').addClass("is-focused");
-  d3.select("#num_edges").attr('value',network.activeLinks(false).length);
+  d3.select("#num_edges").attr('value',network.activeLinks().length);
   drawNetwork(network);
 }
 
 function updateUI() { 
+  $("#num_nodes").parent('div').addClass("is-focused");
+  d3.select("#num_nodes").attr('value',network.nodes.length);
+  $("#num_edges").parent('div').addClass("is-focused");
+  d3.select("#num_edges").attr('value',network.activeLinks().length);
   d3.select("#iter-number").text(addCommas(zeroPad(iter)));
   histChart.addData([Math.floor((Math.random() * 30) + 1)]);
   actLineChart.addDataPoint([Math.random()]);

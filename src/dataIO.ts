@@ -36,12 +36,16 @@ export class Cifar10Sample {
 	container_name: string;
 	heatmap: HeatMap;
 	counter: number;
+	scaler: d3.scale.Linear<number, number>;
 
 
 	constructor(containerName: string, input_data_path: string = "resources/cifar10_1_int.json") {
 		this.input_data_path = input_data_path;
 		this.container_name = containerName;
 		this.counter = 0;
+		this.scaler = d3.scale.linear()
+		      .domain([0,255])
+		      .range([0, 1]);
 		let node = <HTMLElement>d3.select(this.container_name).node();
 
 		let that = this;
@@ -66,7 +70,7 @@ export class Cifar10Sample {
 		});		
 	}
 
-	nextData(increment: boolean = true, flatten: boolean = false): number[][] {
+	nextData(increment: boolean = true): number[][] {
 		if(increment) {
 			return this.data[this.counter++ % this.data_size];
 		} else {
@@ -75,11 +79,16 @@ export class Cifar10Sample {
 	}
 
 	nextDataAndDisplay(increment: boolean = true) {
-		let currentData = this.nextData(increment, false);
+		let currentData = this.nextData(increment);
 		this.heatmap.updateBackground(currentData);
 	}
 
 	displayNextData(currentData: number[][]) {
 		this.heatmap.updateBackground(currentData);
+	}
+
+	flattenNextData(currentData: number[][]) {
+		let that = this;
+		return _.map(_.flatten(currentData),function(n){return that.scaler(n);});
 	}
 }

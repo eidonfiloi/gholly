@@ -50,7 +50,7 @@ export class Node {
     this.outLinks = [];
     this.totalInput = 0;
     this.output = 0;
-    this.threshold = 4.0;
+    this.threshold = 0.5;
     this.waitCount = 0;
   }
 
@@ -80,9 +80,9 @@ export class Node {
     this.totalInput += current_input;
     if(this.totalInput > this.threshold) {
     	if(this.type === NodeType.EXCITATORY) {
-    		this.output = this.totalInput;
+    		this.output = this.totalInput/this.outLinks.length;
     	} else {
-    		this.output = -this.totalInput;
+    		this.output = -this.totalInput/this.outLinks.length;
     	}
       this.state = NodeState.SPIKING;
     	this.totalInput = 0;
@@ -315,11 +315,7 @@ export class Network {
   }
 
   addNeuron(layerIdx: number): void {
-    //output layer
-    if(layerIdx === this.numLayers - 1) {
-      let candidateNodes = this.network[layerIdx];
-    } 
-
+    
   }
 
   removeNeuron(layerIdx: number): void {
@@ -342,9 +338,10 @@ export class Network {
       return new Node("-1",-1);
     }
   }
-  
+
   // returns if after input network is stable or not
   forwardStep(inputs: number[]): boolean {
+    console.log("forwardstep", inputs);
     let inputLayer = this.network[0];
     if (inputs.length > inputLayer.length) {
       throw new Error("The number of inputs must match the number of nodes in" +
