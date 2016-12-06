@@ -50,25 +50,28 @@ export class Node {
     this.outLinks = [];
     this.totalInput = 0;
     this.output = 0;
-    this.threshold = 0.5;
+    this.threshold = 0.1;
     this.waitCount = 0;
   }
 
   /** Recomputes the node's state and output and returns it. */
   updateState(): number {
     // Computes total current input
-    if(this.state == NodeState.SPIKING) {
-      this.state = NodeState.RESPIRATORY;
-      this.waitCount += 1;
-      return 0;
-    } else if (this.state == NodeState.RESPIRATORY && this.waitCount == 1) {
-      this.waitCount += 1;
-      return 0;
-    } else if (this.state == NodeState.RESPIRATORY && this.waitCount == 2) {
-      this.waitCount = 0;
-      this.state = NodeState.DEFAULT;
-    }
+    if(this.state == NodeState.SPIKING && this.waitCount === 0) {
+          console.log("node-" + this.id + " 3333 " + this.state.toString());
 
+      this.waitCount += 1;
+      this.totalInput = 0;
+      this.state = NodeState.RESPIRATORY;
+      return 0;
+    } else if (this.state == NodeState.RESPIRATORY) {
+          console.log("node-" + this.id + " 4444 " + this.state.toString());
+
+      this.state = NodeState.DEFAULT;
+      this.waitCount = 0;
+    } 
+
+    console.log("node-" + this.id + " 1111 " + this.state.toString());
     let current_input = _.reduce(this.inputLinks,function(memo,l:Link){
       if(l.isActive) {
         let source = l.source;
@@ -79,13 +82,15 @@ export class Node {
     	},0);
     this.totalInput += current_input;
     if(this.totalInput > this.threshold) {
+      
     	if(this.type === NodeType.EXCITATORY) {
     		this.output = this.totalInput/this.outLinks.length;
     	} else {
     		this.output = -this.totalInput/this.outLinks.length;
     	}
       this.state = NodeState.SPIKING;
-    	this.totalInput = 0;
+    console.log("node-" + this.id + " 2222 " + this.state.toString());
+    	//this.totalInput = 0;
     } else {
       this.state = NodeState.DEFAULT;
     	this.output = 0;
@@ -220,61 +225,6 @@ export class Network {
     if(growAtOnce) {
       this.grow();
     } 
-    /** Create input nodes, hidden nodes, output nodes */
-    // for (let layerIdx = 0; layerIdx < this.numLayers; layerIdx++) {
-    //   let isOutputLayer = layerIdx === this.numLayers - 1;
-    //   let isInputLayer = layerIdx === 0;
-    //   let currentLayer: Node[] = [];
-    //   this.network.push(currentLayer);
-    //   let numNodes = this.networkShape[layerIdx];
-    //   // create nodes on each layer
-    //   for (let i = 0; i < numNodes; i++) {
-    //     let nodeId = id.toString();
-    //     id++;
-        
-    //     let node = new Node(nodeId,layerIdx);
-    //     this.nodes.push(node);
-    //     currentLayer.push(node);
-    //   }
-    // }
-
-    // // add random links between hidden nodes
-    // for (let i = 0; i < this.networkShape[1]; i++) {
-    //   for (let j = 0; j < this.networkShape[1]; j++) {
-    //     if(i !== j) {
-    //       let aNode = this.network[1][i];
-    //       let bNode = this.network[1][j];
-    //       let abLink = new Link(aNode,bNode,Math.random());
-    //       this.links.push(abLink);
-    //       aNode.outLinks.push(abLink);
-    //       bNode.inputLinks.push(abLink);
-    //     }
-    //   }
-    // }
-
-    // // add links from input to hidden nodes
-    // for (let i = 0; i < this.networkShape[1]; i++) {
-    //   for (let j = 0; j < this.networkShape[0]; j++) {
-    //     let inputNode = this.network[0][j];
-    //     let hiddenNode = this.network[1][i];
-    //     let link = new Link(inputNode, hiddenNode, Math.random());
-    //     this.links.push(link);
-    //     inputNode.outLinks.push(link);
-    //     hiddenNode.inputLinks.push(link);
-    //    }
-    // }
-
-    // // add links from hidden to output nodes
-    // for (let i = 0; i < this.networkShape[1]; i++) {
-    //   for (let j = 0; j < this.networkShape[2]; j++) {
-    //     let outputNode = this.network[2][j];
-    //     let hiddenNode = this.network[1][i];
-    //     let link = new Link(hiddenNode, outputNode, Math.random());
-    //     this.links.push(link);
-    //     hiddenNode.outLinks.push(link);
-    //     outputNode.inputLinks.push(link);
-    //   }
-    // }
   }
 
   grow() {
@@ -352,12 +302,12 @@ export class Network {
     for (let i = 0; i < inputLayer.length; i++) {
       inputLayer[i].output = inputs[i];
     }
+    //update state of hidden nodes
     for (let layerIdx = 1; layerIdx < this.network.length; layerIdx++) {
       let currentLayer = this.network[layerIdx];
       // Update all the nodes in this layer.
       for (let i = 0; i < currentLayer.length; i++) {
-        let node = currentLayer[i];
-        let nodeOutput = node.updateState();
+        let nodeOutput = currentLayer[i].updateState();
         if(nodeOutput > 0) {
           isStable = false;
         } 
@@ -374,8 +324,7 @@ export class Network {
       let currentLayer = this.network[layerIdx];
         // Update all the nodes in this layer.
         for (let i = 0; i < currentLayer.length; i++) {
-          let node = currentLayer[i];
-          let nodeOutput = node.updateState();
+          let nodeOutput = currentLayer[i].updateState();
           if(nodeOutput > 0) {
             // network is still not stable
             spikingAvalancheSize += 1;

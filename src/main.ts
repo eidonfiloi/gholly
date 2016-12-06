@@ -17,7 +17,7 @@ limitations under the License.
 import * as nn from "./nn";
 import {HeatMap, reduceMatrix} from "./heatmap";
 import {NodeType, NodeState, Node, Link, Network} from "./nn";
-import {Cifar10Sample} from "./dataIO";
+import {Cifar10Sample,TestDataIO} from "./dataIO";
 import {AppendingLineChart} from "./linechart";
 import {HistogramChart} from "./histogramchart";
 
@@ -50,10 +50,12 @@ let min_zoom = 0.1;
 let max_zoom = 10;
 let xDomain: [number, number] = [-6, 6];
 
-let dataIOHandler = new Cifar10Sample("#inputDataPlaceHolder");
+//let dataIOHandler = new Cifar10Sample("#inputDataPlaceHolder");
 
-let testNetworkShape = [1024,100,1024]
-let network = new Network(testNetworkShape);
+let dataIOHandler = new TestDataIO("#inputDataPlaceHolder");
+
+let testNetworkShape = [9,20,9]
+let network = new Network(testNetworkShape, false);
 console.log("network", network);
 
 let iter = 0;
@@ -271,14 +273,12 @@ function drawNetwork(network: Network): void {
   nodes = network.hiddenNodes();
   links = network.activeLinks();
 
-  force
-      .nodes(nodes)
-      .links(links);
+  console.log("spiking nodes in drawNetwork", _.filter(nodes,function(n:Node){return n.state === NodeState.SPIKING;}));
+  console.log("network",network);
      
 
   link = g.selectAll(".link")
-      .data(links);
-
+      .data(force.links(), function(l:Link){return l.source.id + "-" + l.target.id;});
 
   link.enter().append("line")
     .attr("class", "link")
@@ -286,24 +286,21 @@ function drawNetwork(network: Network): void {
     .style("stroke-width", function(d:Link) { return Math.sqrt(d.weight);})
     .style("stroke-opacity", function(d:Link) { return .2;})
     .style("stroke-dasharray", "3,3")
-    .each(animLink);  
+    .each(animLink);
 
   // Exit any old links.
   link.exit().remove();
 
+
   node = g.selectAll(".node")
-    .data(nodes);
+    .data(force.nodes(),function (d:Node) {return d.id;});
 
   node
     .enter()
     .append("circle")
-    .attr("class", function(n:Node){
-      if(n.type === NodeType.EXCITATORY) {
-        return "node excitatory";
-      } else {
-        return "node inhibitory"
-      }
-    })
+    .attr("class", "node")
+    .attr("state", function(n:Node){return n.state;})
+    .attr("id", function(n:Node){return n.id;})
     .attr("r",function(n:Node){
       if(n.type === NodeType.EXCITATORY) {
         return 6;
@@ -314,35 +311,62 @@ function drawNetwork(network: Network): void {
     .style("fill","none")
     .style("stroke",function (n:Node) {
       if(n.type === NodeType.EXCITATORY) {
-        if(n.state === NodeState.DEFAULT) {
-        return COLOR_AMBER;
-      } else if(n.state === NodeState.SPIKING) {
-        return COLOR_RED;
+	      if(n.state === NodeState.DEFAULT) {
+	        return COLOR_AMBER;
+	      } else if(n.state === NodeState.SPIKING) {
+	        return COLOR_RED;
+	      } else {
+	        return COLOR_GREY;
+	      }
       } else {
-        return COLOR_GREY;
-      }
-      } else {
-       if(n.state === NodeState.DEFAULT) {
-        return COLOR_CYAN;
-      } else if(n.state === NodeState.SPIKING) {
-        return COLOR_PURPLE;
-      } else {
-        return COLOR_GREY;
-      }
+	      if(n.state === NodeState.DEFAULT) {
+	        return COLOR_CYAN;
+	      } else if(n.state === NodeState.SPIKING) {
+	        return COLOR_PURPLE;
+	      } else {
+	        return COLOR_GREY;
+	      }
       }
     })
     .style("stroke-width",5)
     .on("dblclick", dblclick)
     .call(drag);
 
-  
-
+    node
+    .transition()
+    .duration(25)
+    .style("fill","none")
+    .style("stroke",function (n:Node) {
+      if(n.type === NodeType.EXCITATORY) {
+	      if(n.state === NodeState.DEFAULT) {
+	        return COLOR_AMBER;
+	      } else if(n.state === NodeState.SPIKING) {
+	        return COLOR_RED;
+	      } else {
+	        return COLOR_GREY;
+	      }
+      } else {
+	      if(n.state === NodeState.DEFAULT) {
+	        return COLOR_CYAN;
+	      } else if(n.state === NodeState.SPIKING) {
+	        return COLOR_PURPLE;
+	      } else {
+	        return COLOR_GREY;
+	      }
+      }
+    })
+    .style("stroke-width",5);
+    
   // Exit any old nodes.
   node.exit()
-      // .transition()
-      // .attr("r", 0)
+      .transition()
+      .duration(50)
+      .attr("r", 0)
     .remove();
 
+    force
+      .nodes(nodes)
+      .links(links);
   force.start();
 }
 
@@ -353,25 +377,27 @@ function oneStep(): void {
   dataIOHandler.displayNextData(nextInputData);
 
   let isStable = network.forwardStep(dataIOHandler.flattenNextData(nextInputData));
-  console.log("isStable",isStable);
+  console.log("1 isStable",isStable);
   let spikingAvalancheCount = 0;
   let spikingAvalancheSize = 0;
   while(!isStable) {
+  	drawNetwork(network);
     spikingAvalancheCount += 1;
-    isStable = true;
     let additionalSpikingAvalancheSize = network.stabilizeStep();
-    console.log("additionalSpikingAvalancheSize",additionalSpikingAvalancheSize);
-    console.log("hiddenNodes",network.hiddenNodes());
+    console.log("2 additionalSpikingAvalancheSize",additionalSpikingAvalancheSize);
+    console.log("3 hiddenNodes",network.hiddenNodes());
     if(additionalSpikingAvalancheSize > 0) {
       spikingAvalancheSize += additionalSpikingAvalancheSize;
       isStable = false;
+    } else {
+    	isStable = true;
     }
-    drawNetwork(network);
   }
+  console.log("4 stabilization ended", spikingAvalancheCount);
   network.spikingAvalancheCountArr.push(spikingAvalancheCount);
   network.spikingAvalancheSizeArr.push(spikingAvalancheSize);
   let outP = network.readOutput();
-  console.log(outP);
+  console.log("5 output",outP);
   drawNetwork(network);
   updateUI();
 }

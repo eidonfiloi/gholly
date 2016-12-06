@@ -27,6 +27,71 @@ export interface DataIOBase {
 	nextData: () => number[];
 }
 
+export class TestDataIO {
+	type: DataIOType = DataIOType.IMAGE;
+	input_data_path: string;
+	input_dim: number[];
+	data: number[][][];
+	data_size: number;
+	container_name: string;
+	heatmap: HeatMap;
+	counter: number;
+	scaler: d3.scale.Linear<number, number>;
+
+
+	constructor(containerName: string) {
+		this.container_name = containerName;
+		this.counter = 0;
+		this.scaler = d3.scale.linear()
+		      .domain([0,255])
+		      .range([0, 1]);
+		let node = <HTMLElement>d3.select(this.container_name).node();
+
+		
+		this.input_dim = [3,3];
+
+		let dx = this.input_dim[0];
+		let dy = this.input_dim[1];
+
+	    let totalWidth = node.offsetWidth;
+	    let totalHeight = node.offsetHeight;
+	    let margin = {top: 0, right: 0, bottom: 0, left: 0};
+	    let width = totalWidth - margin.left - margin.right;
+	    let height = totalHeight - margin.top - margin.bottom;
+
+		this.heatmap = new HeatMap(this.container_name, 128, 128, dx, dy);
+			
+	}
+
+	nextData(): number[][] {
+		
+		let arr = [];
+		for (let i=0; i < this.input_dim[0]; i++) {
+			let inner_arr = [];
+			for(let j = 0; j < this.input_dim[1]; j++) {
+				inner_arr.push(Math.round(Math.random() * 255));
+			}
+			arr.push(inner_arr);
+		}
+		return arr;
+		
+	}
+
+	nextDataAndDisplay() {
+		let currentData = this.nextData();
+		this.heatmap.updateBackground(currentData);
+	}
+
+	displayNextData(currentData: number[][]) {
+		this.heatmap.updateBackground(currentData);
+	}
+
+	flattenNextData(currentData: number[][]) {
+		let that = this;
+		return _.map(_.flatten(currentData),function(n){return that.scaler(n);});
+	}
+}
+
 export class Cifar10Sample {
 	type: DataIOType = DataIOType.IMAGE;
 	input_data_path: string;
