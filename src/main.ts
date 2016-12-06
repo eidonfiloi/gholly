@@ -96,13 +96,15 @@ let zoom = d3.behavior.zoom()
 
 svg.call(zoom);
 
+let nodes = network.nodes;
+let links = network.links;
 let force = d3.layout.force<Node>()
     .charge(-400)
     .linkDistance(400)
     //.linkStrength(function(l:Link,i){return 2*l.weight -1;})
     .gravity(0.5)
-    .nodes(network.hiddenNodes())
-    .links(network.activeLinks())
+    .nodes(nodes)
+    .links(links)
     .on("tick", tick);
 
 let drag = force.drag()
@@ -111,9 +113,6 @@ let drag = force.drag()
 let node: d3.selection.Update<Node>;
 
 let link: d3.selection.Update<d3.layout.force.Link<Node>>;
-
-let nodes = force.nodes();
-let links = force.links();
 
 class Player {
   private timerIndex = 0;
@@ -270,10 +269,8 @@ function reset(hard=false) {
 
 function drawNetwork(network: Network): void {
 
-  nodes = network.hiddenNodes();
-  links = network.activeLinks();
 
-  console.log("spiking nodes in drawNetwork", _.filter(nodes,function(n:Node){return n.state === NodeState.SPIKING;}));
+  console.log("spiking nodes in drawNetwork", _.filter(force.nodes(),function(n:Node){return n.state === NodeState.SPIKING;}));
   console.log("network",network);
      
 
@@ -364,9 +361,6 @@ function drawNetwork(network: Network): void {
       .attr("r", 0)
     .remove();
 
-    force
-      .nodes(nodes)
-      .links(links);
   force.start();
 }
 
