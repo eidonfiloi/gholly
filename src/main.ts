@@ -17,7 +17,7 @@ limitations under the License.
 import * as nn from "./nn";
 import {HeatMap, reduceMatrix} from "./heatmap";
 import {NodeType, NodeState, Node, Link, Network} from "./nn";
-import {TestImage} from "./dataIO";
+import {Cifar10Sample} from "./dataIO";
 import {AppendingLineChart} from "./linechart";
 import {HistogramChart} from "./histogramchart";
 
@@ -190,7 +190,7 @@ function makeGUI() {
 
   d3.select("#iter-number").text(addCommas(zeroPad(iter)));
 
-  inputHeatMap.generateHeatMap([]);
+  //inputHeatMap.generateHeatMap([]);
 
 }
 
@@ -317,7 +317,7 @@ function updateUI() {
   // Update the links visually.
   // updateLinkUI(network, d3.select("g.core"));
 
-  inputHeatMap.generateHeatMap([]);
+  //inputHeatMap.generateHeatMap([]);
 
   // // Update all decision boundaries.
   // d3.select("#network").selectAll("div.canvas")

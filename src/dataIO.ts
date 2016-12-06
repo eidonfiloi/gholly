@@ -27,7 +27,7 @@ export interface DataIOBase {
 	nextData: () => number[];
 }
 
-export class Cifar10Sample implements DataIOBase {
+export class Cifar10Sample {
 	type: DataIOType = DataIOType.IMAGE;
 	input_data_path: string;
 	input_dim: number[];
@@ -42,43 +42,46 @@ export class Cifar10Sample implements DataIOBase {
 		this.input_data_path = input_data_path;
 		this.container_name = containerName;
 		this.counter = 0;
+		let node = <HTMLElement>d3.select(this.container_name).node();
 
+		let that = this;
 		d3.json(this.input_data_path, function(error,dat) {
+			console.log("cifar", dat);
 			if(error) console.log(error);
 
-			this.input_dim = dat['dim']
-			this.data = dat['data']
-			this.data_size = this.data.length;
+			that.input_dim = dat.dim;
+			that.data = <number[][][]>dat.data;
+			console.log("cifar this data", that.data);
+			that.data_size = that.data.length;
 
-			let dx = this.input_dim[0];
-			let dy = this.input_dim[1];
+			let dx = that.input_dim[0];
+			let dy = that.input_dim[1];
 
-			let node = <HTMLElement>d3.select(this.container_name).node();
-		    console.log(node);
+		    console.log("dataio node", node);
 		    let totalWidth = node.offsetWidth;
 		    let totalHeight = node.offsetHeight;
 		    let margin = {top: 0, right: 0, bottom: 0, left: 0};
 		    let width = totalWidth - margin.left - margin.right;
 		    let height = totalHeight - margin.top - margin.bottom;
 
-			this.heatmap = new HeatMap(this.container_name, width, height, dx, dy);
+			that.heatmap = new HeatMap(that.container_name, 64, 64, dx, dy);
 		});		
 	}
 
 	nextData(increment: boolean = true, flatten: boolean = false): number[][] {
 		if(increment) {
-			return this.data[counter++ % this.data_size];
+			return this.data[this.counter++ % this.data_size];
 		} else {
-			return this.data[counter % this.data_size];
+			return this.data[this.counter % this.data_size];
 		}
 	}
 
 	nextDataAndDisplay(increment: boolean = true) {
-		let currentData = nextData(increment, false);
-		this.heatmap.updateBackGround(currentData);
+		let currentData = this.nextData(increment, false);
+		this.heatmap.updateBackground(currentData);
 	}
 
 	displayNextData(currentData: number[][]) {
-		this.heatmap.updateBackGround(currentData);
+		this.heatmap.updateBackground(currentData);
 	}
 }

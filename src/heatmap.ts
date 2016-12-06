@@ -46,8 +46,8 @@ export class HeatMap {
   constructor(
       containerName: string, width: number, height: number, dx: number, dy: number, 
       xDomain: [number, number] = [0,255],
-      yDomain: [number, number] = [0, 255],
-      userSettings?: HeatMapSettings) {
+      yDomain: [number, number] = [0,255],
+      userSettings: HeatMapSettings = {showAxes: false}) {
     this.dx = dx;
     this.dy = dy;
     let container = d3.select(containerName);
@@ -160,21 +160,22 @@ export class HeatMap {
     let context = (<HTMLCanvasElement>this.canvas.node()).getContext("2d");
     let image = context.createImageData(dx, dy);
 
-    for (let y = 0, p = -1; y < dy; ++y) {
-      for (let x = 0; x < dx; ++x) {
+    for (let x = 0, p = -1; x < dx; ++x) {
+      for (let y = 0; y < dy; ++y) {
         let value = data[x][y];
         if (discretize) {
           value = (value >= 0 ? 1 : -1);
         }
+        let c = {'r': 0, 'g': 0, 'b': 0};
         if(colorize) {
-          let c = d3.rgb(this.color(value));
+          c = d3.rgb(this.color(value));
         } else {
-          let c = {'r':value, 'g': value, 'b': value};
+          c = {'r':value, 'g': value, 'b': value};
         }
         image.data[++p] = c.r;
         image.data[++p] = c.g;
         image.data[++p] = c.b;
-        image.data[++p] = 160;
+        image.data[++p] = 255;
       }
     }
     context.putImageData(image, 0, 0);
@@ -182,10 +183,10 @@ export class HeatMap {
 
   generateHeatMap(data_: number[][] = []): void {
     // Compute the pixel colors; scaled by CSS.
-    let dx = this.numSamples;
-    let dy = this.numSamples;
+    let dx = this.dx;
+    let dy = this.dy;
     let context = (<HTMLCanvasElement>this.canvas.node()).getContext("2d");
-    let image = context.createImageData(this.numSamples, this.numSamples);
+    let image = context.createImageData(this.dx, this.dy);
 
     for (let y = 0, p = -1; y < dy; ++y) {
       for (let x = 0; x < dx; ++x) {
@@ -203,10 +204,10 @@ export class HeatMap {
   updateHeatMapBackground(node: Node): void {
 
     // Compute the pixel colors; scaled by CSS.
-    let dx = this.numSamples;
-    let dy = this.numSamples;
+    let dx = this.dx;
+    let dy = this.dy;
     let context = (<HTMLCanvasElement>this.canvas.node()).getContext("2d");
-    let image = context.createImageData(this.numSamples, this.numSamples);
+    let image = context.createImageData(this.dx, this.dy);
 
     let value = _.max(node.inputLinks,function(l:Link) {return l.weight;}).weight;
     let c = d3.rgb(this.color(2*value - 1));
