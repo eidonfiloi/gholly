@@ -21,7 +21,6 @@ export enum NodeType {
 
 export enum NodeState {
   SPIKING,
-  RESPIRATORY,
   DEFAULT
 }
 
@@ -50,28 +49,30 @@ export class Node {
     this.outLinks = [];
     this.totalInput = 0;
     this.output = 0;
-    this.threshold = 0.1;
+    this.threshold = 0.2;
     this.waitCount = 0;
   }
 
   /** Recomputes the node's state and output and returns it. */
   updateState(): number {
     // Computes total current input
-    if(this.state == NodeState.SPIKING && this.waitCount === 0) {
-          console.log("node-" + this.id + " 3333 " + this.state.toString());
-
-      this.waitCount += 1;
+    if(this.state == NodeState.SPIKING ) {
       this.totalInput = 0;
-      this.state = NodeState.RESPIRATORY;
-      return 0;
-    } else if (this.state == NodeState.RESPIRATORY) {
-          console.log("node-" + this.id + " 4444 " + this.state.toString());
-
       this.state = NodeState.DEFAULT;
-      this.waitCount = 0;
-    } 
+    }
+    //       console.log("node-" + this.id + " 3333 " + this.state.toString());
 
-    console.log("node-" + this.id + " 1111 " + this.state.toString());
+    //   this.waitCount += 1;
+    //   this.totalInput = 0;
+    //   this.state = NodeState.RESPIRATORY;
+    //   return 0;
+    // } else if (this.state == NodeState.RESPIRATORY) {
+    //       console.log("node-" + this.id + " 4444 " + this.state.toString());
+
+    //   this.state = NodeState.DEFAULT;
+    //   this.waitCount = 0;
+    // } 
+
     let current_input = _.reduce(this.inputLinks,function(memo,l:Link){
       if(l.isActive) {
         let source = l.source;
@@ -81,6 +82,7 @@ export class Node {
       }
     	},0);
     this.totalInput += current_input;
+    this.totalInput = Math.max(this.totalInput, 0);
     if(this.totalInput > this.threshold) {
       
     	if(this.type === NodeType.EXCITATORY) {
@@ -89,8 +91,6 @@ export class Node {
     		this.output = -this.totalInput/this.outLinks.length;
     	}
       this.state = NodeState.SPIKING;
-    console.log("node-" + this.id + " 2222 " + this.state.toString());
-    	//this.totalInput = 0;
     } else {
       this.state = NodeState.DEFAULT;
     	this.output = 0;
@@ -122,7 +122,7 @@ export class Link {
    * @param regularization The regularization function that computes the
    *     penalty for this weight. If null, there will be no regularization.
    */
-  constructor(source: Node, target: Node, weight: number, activeThreshold: number = 0.95) {
+  constructor(source: Node, target: Node, weight: number, activeThreshold: number = 0.5) {
     this.id = source.id + "-" + target.id;
     this.source = source;
     this.target = target;
@@ -178,18 +178,21 @@ export class Network {
         id++;
         
         let node = new Node(nodeId,layerIdx);
+        if(isInputLayer || isOutputLayer) {
+          node.type = NodeType.EXCITATORY;
+        }
         this.nodes.push(node);
         currentLayer.push(node);
       }
     }
 
-    // add random links between hidden nodes
+    //add random links between hidden nodes
     for (let i = 0; i < this.m; i++) {
       for (let j = 0; j < this.m; j++) {
         if(i !== j) {
           let aNode = this.network[1][i];
           let bNode = this.network[1][j];
-          let abLink = new Link(aNode,bNode,Math.random(),0.4);
+          let abLink = new Link(aNode,bNode,Math.random(),Math.random());
           this.links.push(abLink);
           aNode.outLinks.push(abLink);
           bNode.inputLinks.push(abLink);
@@ -202,7 +205,7 @@ export class Network {
       for (let j = 0; j < this.networkShape[0]; j++) {
         let inputNode = this.network[0][j];
         let hiddenNode = this.network[1][i];
-        let link = new Link(inputNode, hiddenNode, Math.random(),0.75);
+        let link = new Link(inputNode, hiddenNode, Math.random(),0.5);
         this.links.push(link);
         inputNode.outLinks.push(link);
         hiddenNode.inputLinks.push(link);
@@ -214,17 +217,21 @@ export class Network {
       for (let j = 0; j < this.networkShape[2]; j++) {
         let outputNode = this.network[2][j];
         let hiddenNode = this.network[1][i];
-        let link = new Link(hiddenNode, outputNode, Math.random(),0.75);
+        let link = new Link(hiddenNode, outputNode, Math.random(),0.5);
         this.links.push(link);
         hiddenNode.outLinks.push(link);
         outputNode.inputLinks.push(link);
       }
     }
 
+    let nL = this.numLayers;
+    
     // grow the network to the specified size
     if(growAtOnce) {
       this.grow();
     } 
+
+    
   }
 
   grow() {
@@ -240,23 +247,26 @@ export class Network {
       
       let node = new Node((this.nodes.length + 1).toString(),1);
 
-      let allIncEdges = _.reduce(this.nodes, function(memo, n: Node){return memo + n.inputLinks.length;},0);
+      let allEdges = _.reduce(this.nodes, function(memo, n: Node){return memo + (n.inputLinks.length + n.outLinks.length + 1);},0);
       let nodesNum = this.nodes.length;
       
-      for(let i = 0; i < this.m; i++) {
+      let i = 0;
+      while(i < this.m) {
         let shuffled = _.shuffle(this.nodes);
         for(let j = 0; j < nodesNum; j++) {
           let cn = <Node>shuffled[j];
-          let p = cn.inputLinks.length / allIncEdges;
+          let p = (cn.inputLinks.length + cn.outLinks.length + 1) / allEdges;
           if(Math.random() <= p) {
             let link = new Link(node, cn, 1.0);
             this.links.push(link);
             node.outLinks.push(link);
             cn.inputLinks.push(link);
+            i++
             break;
           }
         }
       }
+      
 
       this.nodes.push(node);
       this.network[1].push(node);
@@ -291,7 +301,6 @@ export class Network {
 
   // returns if after input network is stable or not
   forwardStep(inputs: number[]): boolean {
-    console.log("forwardstep", inputs);
     let inputLayer = this.network[0];
     if (inputs.length > inputLayer.length) {
       throw new Error("The number of inputs must match the number of nodes in" +
@@ -377,5 +386,17 @@ export class Network {
   hiddenNodes(): Node[] {
     let nL = this.numLayers;
     return _.filter(this.nodes,function(n:Node){return n.layer > 0 && n.layer < (nL - 1)});
+  }
+
+  inDegrees(): number[] {
+    return _.map(this.hiddenNodes(),function(n:Node){return n.inputLinks.length;});
+  }
+
+  outDegrees(): number[] {
+    return _.map(this.hiddenNodes(),function(n:Node){return n.outLinks.length;});
+  }
+
+  allDegrees(): number[] {
+    return _.map(this.hiddenNodes(),function(n:Node){return n.outLinks.length + n.inputLinks.length;});
   }
 }

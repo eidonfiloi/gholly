@@ -54,14 +54,11 @@ let xDomain: [number, number] = [-6, 6];
 
 let dataIOHandler = new TestDataIO("#inputDataPlaceHolder");
 
-let testNetworkShape = [9,20,9]
+let testNetworkShape = [9,250,9]
 let network = new Network(testNetworkShape, false);
 console.log("network", network);
 
 let iter = 0;
-
-let actLineChart = new AppendingLineChart(d3.select("#actLinechart"),
-    ["#FBFBFB"]);
 
 let actLineChart2 = new AppendingLineChart(d3.select("#actLinechart2"),
     ["#FBFBFB","#00BCD4","#FFC107"]);
@@ -72,8 +69,8 @@ let inputHeatMap =
 
 let histDataTest = [1,2,3,4,5,2,3,4,5,7,8,6,5,2,3,1,4,3,2,1,5,4,3,6,7,5,4,5,3,3,3,3,3,2,2,3,3,4,5,6,6,6,7,7,7,6,6];
 
-let histChart = new HistogramChart(d3.select("#histChart"),histDataTest,5,"#00BCD4");
-
+let inDegreeHistChart = new HistogramChart(d3.select("#inDegreeHistChart"),network.inDegrees(),5,COLOR_PINK);
+let allDegreeHistChart = new HistogramChart(d3.select("#allDegreeHistChart"),network.allDegrees(),5,COLOR_ORANGE);
 
 // D3 GRAPH
 let svg = d3.select("#network")
@@ -236,7 +233,7 @@ function makeGUI() {
     oneStep();
   });
 
-  drawNetwork(network);
+  drawNetwork();
 
   d3.select("#network-grow-button").on("click", function () {
     // Change the button's content.
@@ -256,26 +253,24 @@ function makeGUI() {
 function reset(hard=false) {
   
   player.pause();
-  actLineChart.reset();
+  //actLineChart.reset();
   actLineChart2.reset();
   // Make network anew
   if(hard) {
   	iter = 0;
   	network = new Network(testNetworkShape);
   }
-  drawNetwork(network);
+  drawNetwork();
   updateUI();
 };
 
-function drawNetwork(network: Network): void {
-
-
-  console.log("spiking nodes in drawNetwork", _.filter(force.nodes(),function(n:Node){return n.state === NodeState.SPIKING;}));
-  console.log("network",network);
+function drawNetwork(): void {
      
-
   link = g.selectAll(".link")
-      .data(force.links(), function(l:Link){return l.source.id + "-" + l.target.id;});
+      .data(_.filter(force.links(),function(l:Link){return l.isActive && l.sameLayerLink();}), function(l:Link){return l.source.id + "-" + l.target.id;});
+
+  // Exit any old links.
+  link.exit().remove();
 
   link.enter().append("line")
     .attr("class", "link")
@@ -285,12 +280,16 @@ function drawNetwork(network: Network): void {
     .style("stroke-dasharray", "3,3")
     .each(animLink);
 
-  // Exit any old links.
-  link.exit().remove();
-
 
   node = g.selectAll(".node")
-    .data(force.nodes(),function (d:Node) {return d.id;});
+    .data(_.filter(force.nodes(),function(n:Node){return n.layer === 1;}),function (d:Node) {return d.id;});
+
+ // Exit any old nodes.
+  node.exit()
+      .transition()
+      .duration(50)
+      .attr("r", 0)
+    .remove();
 
   node
     .enter()
@@ -353,13 +352,6 @@ function drawNetwork(network: Network): void {
       }
     })
     .style("stroke-width",5);
-    
-  // Exit any old nodes.
-  node.exit()
-      .transition()
-      .duration(50)
-      .attr("r", 0)
-    .remove();
 
   force.start();
 }
@@ -371,15 +363,12 @@ function oneStep(): void {
   dataIOHandler.displayNextData(nextInputData);
 
   let isStable = network.forwardStep(dataIOHandler.flattenNextData(nextInputData));
-  console.log("1 isStable",isStable);
   let spikingAvalancheCount = 0;
   let spikingAvalancheSize = 0;
   while(!isStable) {
-  	drawNetwork(network);
+  	drawNetwork();
     spikingAvalancheCount += 1;
     let additionalSpikingAvalancheSize = network.stabilizeStep();
-    console.log("2 additionalSpikingAvalancheSize",additionalSpikingAvalancheSize);
-    console.log("3 hiddenNodes",network.hiddenNodes());
     if(additionalSpikingAvalancheSize > 0) {
       spikingAvalancheSize += additionalSpikingAvalancheSize;
       isStable = false;
@@ -387,34 +376,34 @@ function oneStep(): void {
     	isStable = true;
     }
   }
-  console.log("4 stabilization ended", spikingAvalancheCount);
   network.spikingAvalancheCountArr.push(spikingAvalancheCount);
   network.spikingAvalancheSizeArr.push(spikingAvalancheSize);
   let outP = network.readOutput();
-  console.log("5 output",outP);
-  drawNetwork(network);
+  drawNetwork();
   updateUI();
 }
 
 function oneGrowStep(): void {
   
   network.growStep();
-  
+
   $("#num_nodes").parent('div').addClass("is-focused");
-  d3.select("#num_nodes").attr('value',network.nodes.length);
+  d3.select("#num_nodes").attr('value',network.hiddenNodes().length);
   $("#num_edges").parent('div').addClass("is-focused");
   d3.select("#num_edges").attr('value',network.activeLinks().length);
-  drawNetwork(network);
+  drawNetwork();
+  inDegreeHistChart.updateData(network.inDegrees());
+  allDegreeHistChart.updateData(network.allDegrees());
 }
 
 function updateUI() { 
   $("#num_nodes").parent('div').addClass("is-focused");
-  d3.select("#num_nodes").attr('value',network.nodes.length);
+  d3.select("#num_nodes").attr('value',network.hiddenNodes().length);
   $("#num_edges").parent('div').addClass("is-focused");
   d3.select("#num_edges").attr('value',network.activeLinks().length);
   d3.select("#iter-number").text(addCommas(zeroPad(iter)));
-  histChart.addData([Math.floor((Math.random() * 30) + 1)]);
-  actLineChart.addDataPoint([Math.random()]);
+  inDegreeHistChart.updateData(network.inDegrees());
+  allDegreeHistChart.updateData(network.allDegrees());
   actLineChart2.addDataPoint([Math.random()*2,Math.random()*3,Math.random()]);
 }
 

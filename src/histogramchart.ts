@@ -30,8 +30,10 @@ export class HistogramChart {
   private hist: d3.Selection<any>;
   private height: number;
   private color: string;
+  container: d3.Selection<any>;
 
   constructor(container: d3.Selection<any>, data_: number[], numBins: number, color: string) {
+    this.container = container;
     let node = <HTMLElement>container.node();
     let totalWidth = node.offsetWidth;
     let totalHeight = node.offsetHeight;
@@ -100,6 +102,11 @@ export class HistogramChart {
 
     this.data = this.data.concat(moreData);
     this.redraw();
+  }
+
+  updateData(newData: number[]) {
+    this.data = newData;
+    this.redraw(); 
   }
 
   private redraw() {
